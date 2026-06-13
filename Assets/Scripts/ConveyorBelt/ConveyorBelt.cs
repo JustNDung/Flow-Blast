@@ -214,9 +214,6 @@ namespace ConveyorBelt
             {
                 ItemGroup group = groups[i];
 
-                if (group.IsAbsorbing)
-                    continue;
-
                 group.DistanceAlongPath = WrapDistance(group.DistanceAlongPath + delta);
 
                 for (int j = 0; j < group.Items.Count; j++)
@@ -231,9 +228,6 @@ namespace ConveyorBelt
             for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
             {
                 ItemGroup group = groups[groupIndex];
-
-                if (group.IsAbsorbing)
-                    continue;
 
                 PathSample sample = GetPositionAtDistance(group.DistanceAlongPath);
                 Vector3 tangent = sample.Direction.sqrMagnitude > 0.0001f ? sample.Direction.normalized : Vector3.right;
@@ -326,18 +320,28 @@ namespace ConveyorBelt
                     continue;
 
                 Transform itemTransform = beltItem.item;
-                beltItem.IsAbsorbing = true;
                 itemTransform.DOKill();
-                Vector3 startPosition = itemTransform.position;
-                Vector3 startScale = itemTransform.localScale;
+
+                Vector3 localStartPos = default;
+                Vector3 localStartScale = default;
+
+                sequence.AppendCallback(() =>
+                {
+                    if (itemTransform != null)
+                    {
+                        beltItem.IsAbsorbing = true;
+                        localStartPos = itemTransform.position;
+                        localStartScale = itemTransform.localScale;
+                    }
+                });
 
                 sequence.Append(DOVirtual.Float(0f, 1f, absorbDuration, t =>
                 {
                     if (itemTransform == null || box == null || box.BoxTransform == null)
                         return;
 
-                    itemTransform.position = Vector3.LerpUnclamped(startPosition, box.BoxTransform.position, t);
-                    itemTransform.localScale = Vector3.LerpUnclamped(startScale, Vector3.zero, t);
+                    itemTransform.position = Vector3.LerpUnclamped(localStartPos, box.BoxTransform.position, t);
+                    itemTransform.localScale = Vector3.LerpUnclamped(localStartScale, Vector3.zero, t);
                 }).SetEase(absorbEase));
                 sequence.AppendCallback(() =>
                 {
