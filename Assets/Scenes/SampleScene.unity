@@ -186,7 +186,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.1, g: 0.55, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -242,20 +242,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ConveyorBelt.ConveyorBelt
   itemSpacing: 0.5
   speed: 2
+  groupSpacing: 0.15
+  sortItemsByColor: 1
+  applyItemColors: 1
+  faceDirection: 1
   lineRenderer: {fileID: 420512269}
   items:
   - item: {fileID: 1231959192}
+    colorGroup: 0
     currentLerp: 0
     startPoint: 1
+    distanceAlongPath: 0
   - item: {fileID: 1439504540}
+    colorGroup: 0
     currentLerp: 0
     startPoint: 1
+    distanceAlongPath: 0
   - item: {fileID: 1756110369}
+    colorGroup: 2
     currentLerp: 0
     startPoint: 1
+    distanceAlongPath: 0
   - item: {fileID: 55025195}
+    colorGroup: 2
     currentLerp: 0
     startPoint: 1
+    distanceAlongPath: 0
 --- !u!120 &420512269
 LineRenderer:
   serializedVersion: 3
@@ -367,7 +379,7 @@ LineRenderer:
     shadowBias: 0.5
     generateLightingData: 0
   m_UseWorldSpace: 1
-  m_Loop: 0
+  m_Loop: 1
   m_ApplyActiveColorSpace: 1
 --- !u!4 &420512270
 Transform:
@@ -672,7 +684,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.18, b: 0.15, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -763,7 +775,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.18, b: 0.15, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -854,7 +866,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.1, g: 0.55, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
