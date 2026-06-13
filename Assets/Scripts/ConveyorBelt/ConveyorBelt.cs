@@ -66,10 +66,11 @@ namespace ConveyorBelt
         [SerializeField] private bool applyItemColors = true;
 
         [Header("Door Match")]
-        [SerializeField] private Transform itemDoor;
-        [SerializeField] private float itemDoorRadius = 0.75f;
+        [SerializeField] private Transform door1;
+        [SerializeField] private Transform door2;
+        
+        [SerializeField] private float boxDoorAlignmentTolerance = 0.35f;
         [SerializeField] private BoxConveyorBelt boxConveyorBelt;
-        [SerializeField] private Transform boxDoor;
 
         [Header("Absorb Animation")]
         [SerializeField] private float absorbDuration = 0.45f;
@@ -108,7 +109,7 @@ namespace ConveyorBelt
             groupCellSpacing.x = Mathf.Max(0.01f, groupCellSpacing.x);
             groupCellSpacing.y = Mathf.Max(0.01f, groupCellSpacing.y);
             groupSpacing = Mathf.Max(0f, groupSpacing);
-            itemDoorRadius = Mathf.Max(0.01f, itemDoorRadius);
+            boxDoorAlignmentTolerance = Mathf.Max(0.01f, boxDoorAlignmentTolerance);
             absorbDuration = Mathf.Max(0.01f, absorbDuration);
             pathDirty = true;
         }
@@ -235,8 +236,11 @@ namespace ConveyorBelt
 
         private void TryAbsorbAtDoor()
         {
-            if (itemDoor == null || boxDoor == null || boxConveyorBelt == null)
+            if (door1 == null || door2 == null || boxConveyorBelt == null)
                 return;
+
+            float doorMinX = Mathf.Min(door1.position.y, door2.position.y);
+            float doorMaxX = Mathf.Max(door1.position.y, door2.position.y);
 
             for (int i = 0; i < groups.Count; i++)
             {
@@ -246,17 +250,28 @@ namespace ConveyorBelt
                     continue;
 
                 PathSample sample = GetPositionAtDistance(group.DistanceAlongPath);
+                float itemX = sample.Position.y;
 
-                if (Vector3.Distance(sample.Position, itemDoor.position) > itemDoorRadius)
+                // Kiểm tra itemGroup có trong khoảng door1-door2 không
+                if (itemX < doorMinX || itemX > doorMaxX)
                     continue;
 
-                if (!boxConveyorBelt.TryGetMatchingBoxAtDoor(group.ColorGroup, boxDoor, out BoxConveyorBelt.ConveyorBox box))
+                // Tìm box cùng màu trong khoảng door
+                if (!boxConveyorBelt.TryGetAlignedBoxInDoorRange(
+                        group.ColorGroup,
+                        doorMinX,
+                        doorMaxX,
+                        boxDoorAlignmentTolerance,
+                        out BoxConveyorBelt.ConveyorBox box))
+                {
                     continue;
+                }
 
                 AbsorbGroup(group, box);
                 break;
             }
         }
+
 
         private void AbsorbGroup(ItemGroup group, BoxConveyorBelt.ConveyorBox box)
         {

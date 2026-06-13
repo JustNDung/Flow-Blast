@@ -41,9 +41,6 @@ namespace ConveyorBelt
         [SerializeField] private float boxSpacing = 2f;
         [SerializeField] private bool applyBoxColors = true;
 
-        [Header("Door")]
-        [SerializeField] private float doorRadius = 0.75f;
-
         private readonly List<float> segmentLengths = new List<float>();
         private readonly List<float> segmentStartDistances = new List<float>();
         private float pathLength;
@@ -59,7 +56,6 @@ namespace ConveyorBelt
         {
             speed = Mathf.Max(0f, speed);
             boxSpacing = Mathf.Max(0.01f, boxSpacing);
-            doorRadius = Mathf.Max(0.01f, doorRadius);
             pathDirty = true;
         }
 
@@ -77,15 +73,18 @@ namespace ConveyorBelt
             MoveBoxes();
         }
 
-        public bool TryGetMatchingBoxAtDoor(
+        public bool TryGetAlignedBox(
             ConveyorBelt.ItemColorGroup colorGroup,
-            Transform door,
+            Vector3 doorPosition,
+            float alignmentTolerance,
             out ConveyorBox matchingBox)
         {
             matchingBox = null;
 
-            if (door == null || boxes == null || pathLength <= 0.0001f)
+            if (boxes == null || pathLength <= 0.0001f)
                 return false;
+
+            alignmentTolerance = Mathf.Max(0.01f, alignmentTolerance);
 
             for (int i = 0; i < boxes.Count; i++)
             {
@@ -95,8 +94,10 @@ namespace ConveyorBelt
                     continue;
 
                 PathSample sample = GetPositionAtDistance(box.distanceAlongPath);
+                bool sharesDoorX = Mathf.Abs(sample.Position.x - doorPosition.x) <= alignmentTolerance;
+                bool sharesDoorY = Mathf.Abs(sample.Position.y - doorPosition.y) <= alignmentTolerance;
 
-                if (Vector3.Distance(sample.Position, door.position) > doorRadius)
+                if (!sharesDoorX && !sharesDoorY)
                     continue;
 
                 matchingBox = box;
@@ -185,7 +186,44 @@ namespace ConveyorBelt
 
             pathDirty = false;
         }
-
+        
+        public bool TryGetAlignedBoxInDoorRange(
+            ConveyorBelt.ItemColorGroup colorGroup,
+            float doorMinX,
+            float doorMaxX,
+            float alignmentTolerance,
+            out ConveyorBox matchingBox)
+        {
+            matchingBox = null;
+        
+            if (boxes == null || pathLength <= 0.0001f)
+                return false;
+        
+            alignmentTolerance = Mathf.Max(0.01f, alignmentTolerance);
+        
+            for (int i = 0; i < boxes.Count; i++)
+            {
+                ConveyorBox box = boxes[i];
+        
+                if (box == null || box.box == null || box.IsAbsorbing || box.colorGroup != colorGroup)
+                    continue;
+        
+                PathSample sample = GetPositionAtDistance(box.distanceAlongPath);
+                float boxX = sample.Position.y;
+        
+                // Kiểm tra box có trong khoảng door và căn chỉnh Y
+                bool inDoorRange = boxX >= doorMinX - alignmentTolerance && boxX <= doorMaxX + alignmentTolerance;
+        
+                if (!inDoorRange)
+                    continue;
+        
+                matchingBox = box;
+                return true;
+            }
+        
+            return false;
+        }
+        
         private PathSample GetPositionAtDistance(float distance)
         {
             distance = WrapDistance(distance);
