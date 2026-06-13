@@ -1,31 +1,30 @@
+using ConveyorBelt.Services;
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Controls;
 
 namespace ConveyorBelt
 {
     public class ColorBoxSelectionPanel : MonoBehaviour
     {
-        private static Sprite squareSprite;
+        private static Sprite _squareSprite;
 
-        private BoxConveyorBelt boxConveyorBelt;
-        private Vector2 buttonSpacing;
-        private ConveyorBelt.ItemColorGroup[] colors;
+        private BoxConveyorBelt _boxConveyorBelt;
+        private Vector2 _buttonSpacing;
+        private BoxConveyorBelt.ItemColorGroup[] _colors;
 
         public static ColorBoxSelectionPanel Create(
             BoxConveyorBelt targetBelt,
             Vector3 center,
             Vector2 spacing,
-            ConveyorBelt.ItemColorGroup[] colorOptions)
+            BoxConveyorBelt.ItemColorGroup[] colorOptions)
         {
             GameObject panelObject = new GameObject("Color Box Selection Panel");
             panelObject.transform.position = center;
 
             ColorBoxSelectionPanel panel = panelObject.AddComponent<ColorBoxSelectionPanel>();
-            panel.boxConveyorBelt = targetBelt;
-            panel.buttonSpacing = spacing;
-            panel.colors = colorOptions;
+            panel._boxConveyorBelt = targetBelt;
+            panel._buttonSpacing = spacing;
+            panel._colors = colorOptions;
             panel.Build();
 
             return panel;
@@ -33,38 +32,38 @@ namespace ConveyorBelt
 
         private void Build()
         {
-            if (boxConveyorBelt == null || colors == null || colors.Length == 0)
+            if (_boxConveyorBelt == null || _colors == null || _colors.Length == 0)
                 return;
 
             SpriteRenderer background = CreateSprite("Panel Background", transform, new Color(0.16f, 0.2f, 0.55f, 0.9f), 0);
             background.transform.localScale = new Vector3(4.6f, 2.1f, 1f);
             background.sortingOrder = -2;
 
-            int columns = Mathf.Min(3, colors.Length);
-            int rows = Mathf.CeilToInt(colors.Length / (float)columns);
+            int columns = Mathf.Min(3, _colors.Length);
+            int rows = Mathf.CeilToInt(_colors.Length / (float)columns);
 
-            for (int i = 0; i < colors.Length; i++)
+            for (int i = 0; i < _colors.Length; i++)
             {
                 int row = i / columns;
                 int column = i % columns;
-                float x = (column - (columns - 1) * 0.5f) * buttonSpacing.x;
-                float y = ((rows - 1) * 0.5f - row) * buttonSpacing.y;
+                float x = (column - (columns - 1) * 0.5f) * _buttonSpacing.x;
+                float y = ((rows - 1) * 0.5f - row) * _buttonSpacing.y;
 
-                GameObject buttonObject = new GameObject($"Panel Box {colors[i]}");
+                GameObject buttonObject = new GameObject($"Panel Box {_colors[i]}");
                 buttonObject.transform.SetParent(transform, false);
                 buttonObject.transform.localPosition = new Vector3(x, y, -0.1f);
                 buttonObject.transform.localScale = new Vector3(0.72f, 0.52f, 1f);
 
                 SpriteRenderer renderer = buttonObject.AddComponent<SpriteRenderer>();
                 renderer.sprite = GetSquareSprite();
-                renderer.color = ConveyorBelt.GroupColors[colors[i]];
+                ColorService.TryApplyColor(renderer, _colors[i]);
                 renderer.sortingOrder = 2;
 
                 BoxCollider2D collider = buttonObject.AddComponent<BoxCollider2D>();
                 collider.size = Vector2.one;
 
                 ColorBoxButton button = buttonObject.AddComponent<ColorBoxButton>();
-                button.Initialize(boxConveyorBelt, colors[i]);
+                button.Initialize(_boxConveyorBelt, _colors[i]);
             }
         }
 
@@ -83,49 +82,49 @@ namespace ConveyorBelt
 
         private static Sprite GetSquareSprite()
         {
-            if (squareSprite != null)
-                return squareSprite;
+            if (_squareSprite != null)
+                return _squareSprite;
 
             Texture2D texture = new Texture2D(1, 1);
             texture.SetPixel(0, 0, Color.white);
             texture.Apply();
-            squareSprite = Sprite.Create(texture, new Rect(0f, 0f, 1f, 1f), new Vector2(0.5f, 0.5f), 1f);
+            _squareSprite = Sprite.Create(texture, new Rect(0f, 0f, 1f, 1f), new Vector2(0.5f, 0.5f), 1f);
 
-            return squareSprite;
+            return _squareSprite;
         }
     }
 
     public class ColorBoxButton : MonoBehaviour
     {
-        private BoxConveyorBelt boxConveyorBelt;
-        private ConveyorBelt.ItemColorGroup colorGroup;
-        private Collider2D buttonCollider;
-        private bool isLaunching;
+        private BoxConveyorBelt _boxConveyorBelt;
+        private BoxConveyorBelt.ItemColorGroup _colorGroup;
+        private Collider2D _buttonCollider;
+        private bool _isLaunching;
 
-        public void Initialize(BoxConveyorBelt targetBelt, ConveyorBelt.ItemColorGroup color)
+        public void Initialize(BoxConveyorBelt targetBelt, BoxConveyorBelt.ItemColorGroup color)
         {
-            boxConveyorBelt = targetBelt;
-            colorGroup = color;
+            _boxConveyorBelt = targetBelt;
+            _colorGroup = color;
         }
 
         private void Awake()
         {
-            buttonCollider = GetComponent<Collider2D>();
+            _buttonCollider = GetComponent<Collider2D>();
         }
 
         private void Update()
         {
-            if (!WasPressedThisFrame(out Vector2 screenPosition))
+            if (!InputService.WasPressedThisFrame(out Vector2 screenPosition))
                 return;
 
-            Camera mainCamera = Camera.main;
+            Vector2? worldPositionNullable = InputService.ScreenToWorldPoint(screenPosition);
 
-            if (mainCamera == null || buttonCollider == null)
+            if (worldPositionNullable == null || _buttonCollider == null)
                 return;
 
-            Vector3 worldPosition = mainCamera.ScreenToWorldPoint(screenPosition);
+            Vector2 worldPosition = worldPositionNullable.Value;
 
-            if (!buttonCollider.OverlapPoint(worldPosition))
+            if (!_buttonCollider.OverlapPoint(worldPosition))
                 return;
 
             LaunchBox();
@@ -133,45 +132,22 @@ namespace ConveyorBelt
 
         private void LaunchBox()
         {
-            if (isLaunching || boxConveyorBelt == null)
+            if (_isLaunching || _boxConveyorBelt == null)
                 return;
 
-            isLaunching = true;
+            _isLaunching = true;
 
             Transform launchedBox = Instantiate(transform, transform.position, Quaternion.identity);
-            launchedBox.name = $"Selected Box {colorGroup}";
+            launchedBox.name = $"Selected Box {_colorGroup}";
             launchedBox.localScale = transform.lossyScale;
             launchedBox.DOPunchScale(Vector3.one * 0.12f, 0.18f, 1, 0.5f);
 
-            bool accepted = boxConveyorBelt.TryAddBoxFromPanel(launchedBox, colorGroup);
+            bool accepted = _boxConveyorBelt.TryAddBoxFromPanel(launchedBox, _colorGroup);
 
             if (!accepted)
                 Destroy(launchedBox.gameObject);
 
-            DOVirtual.DelayedCall(0.2f, () => isLaunching = false);
-        }
-
-        private static bool WasPressedThisFrame(out Vector2 screenPosition)
-        {
-            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
-            {
-                screenPosition = Mouse.current.position.ReadValue();
-                return true;
-            }
-
-            if (Touchscreen.current != null)
-            {
-                TouchControl touch = Touchscreen.current.primaryTouch;
-
-                if (touch.press.wasPressedThisFrame)
-                {
-                    screenPosition = touch.position.ReadValue();
-                    return true;
-                }
-            }
-
-            screenPosition = default;
-            return false;
+            DOVirtual.DelayedCall(0.2f, () => _isLaunching = false);
         }
     }
 }
