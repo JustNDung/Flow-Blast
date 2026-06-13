@@ -70,12 +70,25 @@ namespace ConveyorBelt
         [SerializeField] private List<ItemColorGroup> generatedColorSequence = new List<ItemColorGroup>
         {
             ItemColorGroup.Red,
-            ItemColorGroup.Yellow,
-            ItemColorGroup.Blue,
-            ItemColorGroup.Purple,
-            ItemColorGroup.Yellow,
             ItemColorGroup.Red,
-            ItemColorGroup.Blue
+            ItemColorGroup.Red,
+            ItemColorGroup.Red,
+            ItemColorGroup.Red,
+            ItemColorGroup.Blue,
+            ItemColorGroup.Blue,
+            ItemColorGroup.Blue,
+            ItemColorGroup.Blue,
+            ItemColorGroup.Blue,
+            ItemColorGroup.Yellow,
+            ItemColorGroup.Yellow,
+            ItemColorGroup.Yellow,
+            ItemColorGroup.Yellow,
+            ItemColorGroup.Yellow,
+            ItemColorGroup.Purple,
+            ItemColorGroup.Purple,
+            ItemColorGroup.Purple,
+            ItemColorGroup.Purple,
+            ItemColorGroup.Purple
         };
 
         [Header("Door Match")]
@@ -317,34 +330,32 @@ namespace ConveyorBelt
 
             Sequence sequence = DOTween.Sequence();
             bool absorptionCanceled = false;
-            ConveyorBeltItem activeAbsorbingItem = null;
-            Transform activeAbsorbingTransform = null;
-            Vector3 activeAbsorbingStartScale = Vector3.one;
-            int remainingBoxSlots = boxConveyorBelt.GetRemainingCapacity(box);
-            List<ConveyorBeltItem> absorbedItems = group.Items
-                .Where(item => item != null && item.item != null && !item.IsAbsorbed && !item.IsAbsorbing)
-                .Take(remainingBoxSlots)
-                .ToList();
+            List<ConveyorBeltItem> activeAbsorbingItems = new List<ConveyorBeltItem>();
+            List<Transform> activeAbsorbingTransforms = new List<Transform>();
+            List<Vector3> activeAbsorbingStartScales = new List<Vector3>();
+            int remainingBoxRows = boxConveyorBelt.GetRemainingRowCapacity(box);
+            List<List<ConveyorBeltItem>> absorbedRows = GetAbsorbableRows(group, remainingBoxRows);
 
-            if (absorbedItems.Count == 0)
+            if (absorbedRows.Count == 0)
             {
                 group.IsAbsorbing = false;
                 box.IsAbsorbing = false;
                 return;
             }
 
-            for (int i = 0; i < absorbedItems.Count; i++)
+            for (int rowIndex = 0; rowIndex < absorbedRows.Count; rowIndex++)
             {
-                ConveyorBeltItem beltItem = absorbedItems[i];
+                List<ConveyorBeltItem> rowItems = absorbedRows[rowIndex];
 
-                if (beltItem == null || beltItem.item == null)
+                if (rowItems == null || rowItems.Count == 0)
                     continue;
 
-                Transform itemTransform = beltItem.item;
-                itemTransform.DOKill();
-
-                Vector3 localStartPos = default;
-                Vector3 localStartScale = default;
+                List<Transform> rowTransforms = rowItems
+                    .Where(item => item != null && item.item != null)
+                    .Select(item => item.item)
+                    .ToList();
+                List<Vector3> rowStartPositions = new List<Vector3>();
+                List<Vector3> rowStartScales = new List<Vector3>();
 
                 sequence.AppendCallback(() =>
                 {
@@ -355,20 +366,34 @@ namespace ConveyorBelt
                         return;
                     }
 
-                    if (itemTransform != null)
+                    activeAbsorbingItems.Clear();
+                    activeAbsorbingTransforms.Clear();
+                    activeAbsorbingStartScales.Clear();
+                    rowStartPositions.Clear();
+                    rowStartScales.Clear();
+
+                    for (int i = 0; i < rowItems.Count; i++)
                     {
-                        beltItem.IsAbsorbing = true;
-                        activeAbsorbingItem = beltItem;
-                        activeAbsorbingTransform = itemTransform;
-                        localStartPos = itemTransform.position;
-                        localStartScale = itemTransform.localScale;
-                        activeAbsorbingStartScale = localStartScale;
+                        ConveyorBeltItem rowItem = rowItems[i];
+
+                        if (rowItem == null || rowItem.item == null)
+                            continue;
+
+                        Transform rowTransform = rowItem.item;
+                        rowTransform.DOKill();
+                        rowItem.IsAbsorbing = true;
+
+                        activeAbsorbingItems.Add(rowItem);
+                        activeAbsorbingTransforms.Add(rowTransform);
+                        activeAbsorbingStartScales.Add(rowTransform.localScale);
+                        rowStartPositions.Add(rowTransform.position);
+                        rowStartScales.Add(rowTransform.localScale);
                     }
                 });
 
                 sequence.Append(DOVirtual.Float(0f, 1f, absorbDuration, t =>
                 {
-                    if (itemTransform == null || box == null || box.BoxTransform == null)
+                    if (box == null || box.BoxTransform == null)
                         return;
 
                     if (!IsGroupAtDoor(group))
@@ -378,22 +403,46 @@ namespace ConveyorBelt
                         return;
                     }
 
-                    itemTransform.position = Vector3.LerpUnclamped(localStartPos, box.BoxTransform.position, t);
-                    itemTransform.localScale = Vector3.LerpUnclamped(localStartScale, Vector3.zero, t);
+                    for (int i = 0; i < activeAbsorbingTransforms.Count; i++)
+                    {
+                        Transform itemTransform = activeAbsorbingTransforms[i];
+
+                        if (itemTransform == null)
+                            continue;
+
+                        itemTransform.position = Vector3.LerpUnclamped(rowStartPositions[i], box.BoxTransform.position, t);
+                        itemTransform.localScale = Vector3.LerpUnclamped(rowStartScales[i], Vector3.zero, t);
+                    }
                 }).SetEase(absorbEase));
                 sequence.AppendCallback(() =>
                 {
                     if (absorptionCanceled)
                         return;
 
-                    beltItem.IsAbsorbing = false;
-                    beltItem.IsAbsorbed = true;
-                    activeAbsorbingItem = null;
-                    activeAbsorbingTransform = null;
-                    boxConveyorBelt.StoreBlockInBox(box, itemTransform);
+                    for (int i = 0; i < rowItems.Count; i++)
+                    {
+                        ConveyorBeltItem rowItem = rowItems[i];
+
+                        if (rowItem == null || rowItem.item == null)
+                            continue;
+
+                        rowItem.IsAbsorbing = false;
+                        rowItem.IsAbsorbed = true;
+                    }
+
+                    activeAbsorbingItems.Clear();
+                    activeAbsorbingTransforms.Clear();
+                    activeAbsorbingStartScales.Clear();
+                    boxConveyorBelt.StoreRowInBox(box, rowTransforms);
 
                     if (hideAbsorbedItems)
-                        itemTransform.gameObject.SetActive(false);
+                    {
+                        for (int i = 0; i < rowTransforms.Count; i++)
+                        {
+                            if (rowTransforms[i] != null)
+                                rowTransforms[i].gameObject.SetActive(false);
+                        }
+                    }
                 });
 
                 if (absorbInterval > 0f)
@@ -414,11 +463,17 @@ namespace ConveyorBelt
                 if (!absorptionCanceled)
                     return;
 
-                if (activeAbsorbingItem != null)
-                    activeAbsorbingItem.IsAbsorbing = false;
+                for (int i = 0; i < activeAbsorbingItems.Count; i++)
+                {
+                    if (activeAbsorbingItems[i] != null)
+                        activeAbsorbingItems[i].IsAbsorbing = false;
+                }
 
-                if (activeAbsorbingTransform != null)
-                    activeAbsorbingTransform.localScale = activeAbsorbingStartScale;
+                for (int i = 0; i < activeAbsorbingTransforms.Count; i++)
+                {
+                    if (activeAbsorbingTransforms[i] != null && i < activeAbsorbingStartScales.Count)
+                        activeAbsorbingTransforms[i].localScale = activeAbsorbingStartScales[i];
+                }
 
                 if (!box.IsCompleting)
                     box.IsAbsorbing = false;
@@ -426,6 +481,36 @@ namespace ConveyorBelt
                 group.IsAbsorbing = false;
                 PlaceGroups();
             });
+        }
+
+        private List<List<ConveyorBeltItem>> GetAbsorbableRows(ItemGroup group, int maxRows)
+        {
+            List<List<ConveyorBeltItem>> rows = new List<List<ConveyorBeltItem>>();
+
+            if (group == null || maxRows <= 0)
+                return rows;
+
+            int rowCount = Mathf.CeilToInt(group.Items.Count / (float)groupColumns);
+
+            for (int row = 0; row < rowCount && rows.Count < maxRows; row++)
+            {
+                List<ConveyorBeltItem> rowItems = new List<ConveyorBeltItem>();
+                int rowStart = row * groupColumns;
+                int rowEnd = Mathf.Min(rowStart + groupColumns, group.Items.Count);
+
+                for (int i = rowStart; i < rowEnd; i++)
+                {
+                    ConveyorBeltItem item = group.Items[i];
+
+                    if (item != null && item.item != null && !item.IsAbsorbed && !item.IsAbsorbing)
+                        rowItems.Add(item);
+                }
+
+                if (rowItems.Count > 0)
+                    rows.Add(rowItems);
+            }
+
+            return rows;
         }
 
         private int GetActiveItemCount(ItemGroup group)

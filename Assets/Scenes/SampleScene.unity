@@ -249,28 +249,25 @@ MonoBehaviour:
     colorGroup: 0
     distanceAlongPath: 0
     IsAbsorbing: 0
-    StoredBlockCount: 0
+    StoredRowCount: 0
     IsCompleting: 0
   - box: {fileID: 200005001}
     colorGroup: 2
     distanceAlongPath: 0
     IsAbsorbing: 0
-    StoredBlockCount: 0
+    StoredRowCount: 0
     IsCompleting: 0
   boxSpacing: 2
   applyBoxColors: 1
   startWithSceneBoxes: 0
   maxBoxesOnBelt: 5
-  boxGateX: 20
-  boxGateXTolerance: 0.75
-  boxRows: 4
-  boxColumns: 9
+  fillPerItemRow: 0.05
   storedBlockSpacing: {x: 0.08, y: 0.08}
   storedBlockScale: {x: 0.12, y: 0.12, z: 1}
   autoCreateSelectionPanel: 1
   panelCenter: {x: 0, y: -4.25, z: 0}
   panelSpacing: {x: 1.2, y: 0.95}
-  panelColors: 000000000200000001000000040000000100000000000000
+  panelColors: 00000000020000000100000004000000
 --- !u!120 &200001002
 LineRenderer:
   serializedVersion: 3
@@ -1434,7 +1431,7 @@ MonoBehaviour:
   sortItemsByColor: 1
   applyItemColors: 1
   generateRuntimeLevelGroups: 1
-  generatedColorSequence: 00000000010000000200000004000000010000000000000002000000
+  generatedColorSequence: 0000000000000000000000000000000000000000020000000200000002000000020000000200000001000000010000000100000001000000010000000400000004000000040000000400000004000000
   door1: {fileID: 1867203263}
   door2: {fileID: 495132121}
   itemDoorXTolerance: 0.75

@@ -15,7 +15,7 @@ namespace ConveyorBelt
 
             [HideInInspector] public float distanceAlongPath;
             [HideInInspector] public bool IsAbsorbing;
-            [HideInInspector] public int StoredBlockCount;
+            [HideInInspector] public int StoredRowCount;
             [HideInInspector] public bool IsCompleting;
 
             public Transform BoxTransform => box;
@@ -46,13 +46,8 @@ namespace ConveyorBelt
         [SerializeField] private bool startWithSceneBoxes = false;
         [SerializeField] private int maxBoxesOnBelt = 5;
 
-        [Header("Gate Match")]
-        [SerializeField] private float boxGateX = 20f;
-        [SerializeField] private float boxGateXTolerance = 0.75f;
-
         [Header("Box Capacity")]
-        [SerializeField] private int boxRows = 4;
-        [SerializeField] private int boxColumns = 9;
+        [SerializeField] private float fillPerItemRow = 0.05f;
         [SerializeField] private Vector2 storedBlockSpacing = new Vector2(0.08f, 0.08f);
         [SerializeField] private Vector3 storedBlockScale = new Vector3(0.12f, 0.12f, 1f);
 
@@ -65,9 +60,7 @@ namespace ConveyorBelt
             ConveyorBelt.ItemColorGroup.Red,
             ConveyorBelt.ItemColorGroup.Blue,
             ConveyorBelt.ItemColorGroup.Yellow,
-            ConveyorBelt.ItemColorGroup.Purple,
-            ConveyorBelt.ItemColorGroup.Yellow,
-            ConveyorBelt.ItemColorGroup.Red
+            ConveyorBelt.ItemColorGroup.Purple
         };
 
         private readonly List<float> segmentLengths = new List<float>();
@@ -99,9 +92,7 @@ namespace ConveyorBelt
             speed = Mathf.Max(0f, speed);
             boxSpacing = Mathf.Max(0.01f, boxSpacing);
             maxBoxesOnBelt = Mathf.Max(1, maxBoxesOnBelt);
-            boxGateXTolerance = Mathf.Max(0.01f, boxGateXTolerance);
-            boxRows = Mathf.Max(1, boxRows);
-            boxColumns = Mathf.Max(1, boxColumns);
+            fillPerItemRow = Mathf.Clamp(fillPerItemRow, 0.01f, 1f);
             storedBlockSpacing.x = Mathf.Max(0.01f, storedBlockSpacing.x);
             storedBlockSpacing.y = Mathf.Max(0.01f, storedBlockSpacing.y);
             pathDirty = true;
@@ -119,40 +110,6 @@ namespace ConveyorBelt
                 return;
 
             MoveBoxes();
-        }
-
-        public bool TryGetAlignedBox(
-            ConveyorBelt.ItemColorGroup colorGroup,
-            Vector3 doorPosition,
-            float alignmentTolerance,
-            out ConveyorBox matchingBox)
-        {
-            matchingBox = null;
-
-            if (boxes == null || pathLength <= 0.0001f)
-                return false;
-
-            alignmentTolerance = Mathf.Max(0.01f, alignmentTolerance);
-
-            for (int i = 0; i < boxes.Count; i++)
-            {
-                ConveyorBox box = boxes[i];
-
-                if (box == null || box.box == null || box.IsAbsorbing || box.IsCompleting || IsBoxFull(box) || box.colorGroup != colorGroup)
-                    continue;
-
-                PathSample sample = GetPositionAtDistance(box.distanceAlongPath);
-                bool sharesDoorX = Mathf.Abs(sample.Position.x - doorPosition.x) <= alignmentTolerance;
-                bool sharesDoorY = Mathf.Abs(sample.Position.y - doorPosition.y) <= alignmentTolerance;
-
-                if (!sharesDoorX && !sharesDoorY)
-                    continue;
-
-                matchingBox = box;
-                return true;
-            }
-
-            return false;
         }
 
         public bool TryGetAvailableBox(
@@ -227,30 +184,46 @@ namespace ConveyorBelt
             return true;
         }
 
-        public void StoreBlockInBox(ConveyorBox box, Transform block)
+        public void StoreRowInBox(ConveyorBox box, IReadOnlyList<Transform> rowBlocks)
         {
-            if (box == null || box.box == null || block == null || box.IsCompleting)
+            if (box == null || box.box == null || rowBlocks == null || rowBlocks.Count == 0 || box.IsCompleting)
                 return;
 
-            int slot = Mathf.Clamp(box.StoredBlockCount, 0, GetBoxCapacity() - 1);
-            box.StoredBlockCount++;
+            int rowSlot = box.StoredRowCount;
+            box.StoredRowCount++;
 
-            block.SetParent(box.box, true);
-            block.localRotation = Quaternion.identity;
-            block.localPosition = GetStoredBlockLocalPosition(slot);
-            block.localScale = storedBlockScale;
-            block.gameObject.SetActive(true);
+            for (int i = 0; i < rowBlocks.Count; i++)
+            {
+                Transform block = rowBlocks[i];
+
+                if (block == null)
+                    continue;
+
+                block.SetParent(box.box, true);
+                block.localRotation = Quaternion.identity;
+                block.localPosition = GetStoredRowBlockLocalPosition(rowSlot, i, rowBlocks.Count);
+                block.localScale = storedBlockScale;
+                block.gameObject.SetActive(true);
+            }
 
             if (IsBoxFull(box))
                 CompleteBox(box);
         }
 
-        public int GetRemainingCapacity(ConveyorBox box)
+        public int GetRemainingRowCapacity(ConveyorBox box)
         {
             if (box == null)
                 return 0;
 
-            return Mathf.Max(0, GetBoxCapacity() - box.StoredBlockCount);
+            return Mathf.Max(0, GetRowCapacity() - box.StoredRowCount);
+        }
+
+        public float GetFillPercent(ConveyorBox box)
+        {
+            if (box == null)
+                return 0f;
+
+            return Mathf.Clamp01(box.StoredRowCount * fillPerItemRow);
         }
 
         [ContextMenu("Arrange Boxes")]
@@ -333,42 +306,6 @@ namespace ConveyorBelt
             pathDirty = false;
         }
         
-        public bool TryGetAlignedBoxInDoorRange(
-            ConveyorBelt.ItemColorGroup colorGroup,
-            float doorMinY,
-            float doorMaxY,
-            float alignmentTolerance,
-            out ConveyorBox matchingBox)
-        {
-            matchingBox = null;
-        
-            if (boxes == null || pathLength <= 0.0001f)
-                return false;
-        
-            alignmentTolerance = Mathf.Max(0.01f, alignmentTolerance);
-        
-            for (int i = 0; i < boxes.Count; i++)
-            {
-                ConveyorBox box = boxes[i];
-        
-                if (box == null || box.box == null || box.IsAbsorbing || box.IsCompleting || IsBoxFull(box) || box.colorGroup != colorGroup)
-                    continue;
-        
-                PathSample sample = GetPositionAtDistance(box.distanceAlongPath);
-                float boxY = sample.Position.y;
-                bool inDoorRange = boxY >= doorMinY - alignmentTolerance && boxY <= doorMaxY + alignmentTolerance;
-                bool atBoxGate = Mathf.Abs(sample.Position.x - boxGateX) <= boxGateXTolerance;
-        
-                if (!inDoorRange || !atBoxGate)
-                    continue;
-        
-                matchingBox = box;
-                return true;
-            }
-        
-            return false;
-        }
-
         private void CacheSceneBoxTemplates()
         {
             sceneBoxTemplates.Clear();
@@ -396,14 +333,14 @@ namespace ConveyorBelt
             return boxes.Count + pendingBoxes < maxBoxesOnBelt;
         }
 
-        private int GetBoxCapacity()
+        private int GetRowCapacity()
         {
-            return boxRows * boxColumns;
+            return Mathf.Max(1, Mathf.CeilToInt(1f / fillPerItemRow));
         }
 
         private bool IsBoxFull(ConveyorBox box)
         {
-            return box != null && box.StoredBlockCount >= GetBoxCapacity();
+            return GetFillPercent(box) >= 1f;
         }
 
         private float GetSpawnDistance()
@@ -416,12 +353,12 @@ namespace ConveyorBelt
             return WrapDistance(lastBox.distanceAlongPath + boxSpacing * direction);
         }
 
-        private Vector3 GetStoredBlockLocalPosition(int slot)
+        private Vector3 GetStoredRowBlockLocalPosition(int row, int column, int columnCount)
         {
-            int row = slot / boxColumns;
-            int column = slot % boxColumns;
-            float x = (column - (boxColumns - 1) * 0.5f) * storedBlockSpacing.x;
-            float y = ((boxRows - 1) * 0.5f - row) * storedBlockSpacing.y;
+            int usedColumns = Mathf.Max(1, columnCount);
+            float x = (column - (usedColumns - 1) * 0.5f) * storedBlockSpacing.x;
+            float y = ((GetRowCapacity() - 1) * 0.5f - row) * storedBlockSpacing.y;
+            int slot = row * usedColumns + column;
             return new Vector3(x, y, -0.01f - slot * 0.001f);
         }
 
