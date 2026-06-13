@@ -155,6 +155,29 @@ namespace ConveyorBelt
             return false;
         }
 
+        public bool TryGetAvailableBox(
+            ConveyorBelt.ItemColorGroup colorGroup,
+            out ConveyorBox matchingBox)
+        {
+            matchingBox = null;
+
+            if (boxes == null)
+                return false;
+
+            for (int i = 0; i < boxes.Count; i++)
+            {
+                ConveyorBox box = boxes[i];
+
+                if (box == null || box.box == null || box.IsAbsorbing || box.IsCompleting || IsBoxFull(box) || box.colorGroup != colorGroup)
+                    continue;
+
+                matchingBox = box;
+                return true;
+            }
+
+            return false;
+        }
+
         public bool TryAddBoxFromPanel(Transform panelBox, ConveyorBelt.ItemColorGroup colorGroup)
         {
             if (panelBox == null || !CanAcceptMoreBoxes() || pathLength <= 0.0001f)

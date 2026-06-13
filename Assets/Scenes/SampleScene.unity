@@ -249,10 +249,14 @@ MonoBehaviour:
     colorGroup: 0
     distanceAlongPath: 0
     IsAbsorbing: 0
+    StoredBlockCount: 0
+    IsCompleting: 0
   - box: {fileID: 200005001}
     colorGroup: 2
     distanceAlongPath: 0
     IsAbsorbing: 0
+    StoredBlockCount: 0
+    IsCompleting: 0
   boxSpacing: 2
   applyBoxColors: 1
   startWithSceneBoxes: 0
@@ -266,13 +270,7 @@ MonoBehaviour:
   autoCreateSelectionPanel: 1
   panelCenter: {x: 0, y: -4.25, z: 0}
   panelSpacing: {x: 1.2, y: 0.95}
-  panelColors:
-  - 0
-  - 2
-  - 1
-  - 4
-  - 1
-  - 0
+  panelColors: 000000000200000001000000040000000100000000000000
 --- !u!120 &200001002
 LineRenderer:
   serializedVersion: 3
@@ -1350,61 +1348,85 @@ MonoBehaviour:
     currentLerp: 0
     startPoint: 1
     distanceAlongPath: 0
+    IsAbsorbing: 0
+    IsAbsorbed: 0
   - item: {fileID: 1439504540}
     colorGroup: 0
     currentLerp: 0
     startPoint: 1
     distanceAlongPath: 0
+    IsAbsorbing: 0
+    IsAbsorbed: 0
   - item: {fileID: 300001001}
     colorGroup: 0
     currentLerp: 0
     startPoint: 1
     distanceAlongPath: 0
+    IsAbsorbing: 0
+    IsAbsorbed: 0
   - item: {fileID: 300002001}
     colorGroup: 0
     currentLerp: 0
     startPoint: 1
     distanceAlongPath: 0
+    IsAbsorbing: 0
+    IsAbsorbed: 0
   - item: {fileID: 300003001}
     colorGroup: 0
     currentLerp: 0
     startPoint: 1
     distanceAlongPath: 0
+    IsAbsorbing: 0
+    IsAbsorbed: 0
   - item: {fileID: 300004001}
     colorGroup: 0
     currentLerp: 0
     startPoint: 1
     distanceAlongPath: 0
+    IsAbsorbing: 0
+    IsAbsorbed: 0
   - item: {fileID: 1756110369}
     colorGroup: 2
     currentLerp: 0
     startPoint: 1
     distanceAlongPath: 0
+    IsAbsorbing: 0
+    IsAbsorbed: 0
   - item: {fileID: 55025195}
     colorGroup: 2
     currentLerp: 0
     startPoint: 1
     distanceAlongPath: 0
+    IsAbsorbing: 0
+    IsAbsorbed: 0
   - item: {fileID: 300005001}
     colorGroup: 2
     currentLerp: 0
     startPoint: 1
     distanceAlongPath: 0
+    IsAbsorbing: 0
+    IsAbsorbed: 0
   - item: {fileID: 300006001}
     colorGroup: 2
     currentLerp: 0
     startPoint: 1
     distanceAlongPath: 0
+    IsAbsorbing: 0
+    IsAbsorbed: 0
   - item: {fileID: 300007001}
     colorGroup: 2
     currentLerp: 0
     startPoint: 1
     distanceAlongPath: 0
+    IsAbsorbing: 0
+    IsAbsorbed: 0
   - item: {fileID: 300008001}
     colorGroup: 2
     currentLerp: 0
     startPoint: 1
     distanceAlongPath: 0
+    IsAbsorbing: 0
+    IsAbsorbed: 0
   groupRows: 4
   groupColumns: 9
   groupCellSpacing: {x: 0.18, y: 0.18}
@@ -1412,18 +1434,10 @@ MonoBehaviour:
   sortItemsByColor: 1
   applyItemColors: 1
   generateRuntimeLevelGroups: 1
-  generatedColorSequence:
-  - 0
-  - 1
-  - 2
-  - 4
-  - 1
-  - 0
-  - 2
+  generatedColorSequence: 00000000010000000200000004000000010000000000000002000000
   door1: {fileID: 1867203263}
   door2: {fileID: 495132121}
   itemDoorXTolerance: 0.75
-  boxDoorAlignmentTolerance: 0.35
   boxConveyorBelt: {fileID: 200001001}
   absorbDuration: 0.16
   absorbInterval: 0.01

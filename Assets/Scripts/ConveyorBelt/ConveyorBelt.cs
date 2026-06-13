@@ -83,7 +83,6 @@ namespace ConveyorBelt
         [SerializeField] private Transform door2;
         
         [SerializeField] private float itemDoorXTolerance = 0.75f;
-        [SerializeField] private float boxDoorAlignmentTolerance = 0.35f;
         [SerializeField] private BoxConveyorBelt boxConveyorBelt;
 
         [Header("Absorb Animation")]
@@ -129,7 +128,6 @@ namespace ConveyorBelt
             groupCellSpacing.y = Mathf.Max(0.01f, groupCellSpacing.y);
             groupSpacing = Mathf.Max(0f, groupSpacing);
             itemDoorXTolerance = Mathf.Max(0.01f, itemDoorXTolerance);
-            boxDoorAlignmentTolerance = Mathf.Max(0.01f, boxDoorAlignmentTolerance);
             absorbDuration = Mathf.Max(0.01f, absorbDuration);
             absorbInterval = Mathf.Max(0f, absorbInterval);
             pathDirty = true;
@@ -267,21 +265,15 @@ namespace ConveyorBelt
                 if (group.IsAbsorbing || group.Items.Count == 0 || GetActiveItemCount(group) == 0)
                     continue;
 
-                PathSample sample = GetPositionAtDistance(group.DistanceAlongPath);
-                float itemY = sample.Position.y;
-                bool itemInsideDoorY = itemY >= doorMinY && itemY <= doorMaxY;
-                bool itemAtGateX = Mathf.Abs(sample.Position.x - doorCenterX) <= itemDoorXTolerance;
+                bool groupAtDoor = IsGroupAtDoor(group, doorMinY, doorMaxY, doorCenterX);
 
                 // Kiểm tra itemGroup có trong khoảng door1-door2 không
-                if (!itemInsideDoorY || !itemAtGateX)
+                if (!groupAtDoor)
                     continue;
 
                 // Tìm box cùng màu trong khoảng door
-                if (!boxConveyorBelt.TryGetAlignedBoxInDoorRange(
+                if (!boxConveyorBelt.TryGetAvailableBox(
                         group.ColorGroup,
-                        doorMinY,
-                        doorMaxY,
-                        boxDoorAlignmentTolerance,
                         out BoxConveyorBelt.ConveyorBox box))
                 {
                     continue;
@@ -292,6 +284,31 @@ namespace ConveyorBelt
             }
         }
 
+        private bool IsGroupAtDoor(ItemGroup group)
+        {
+            if (door1 == null || door2 == null || group == null)
+                return false;
+
+            float doorMinY = Mathf.Min(door1.position.y, door2.position.y);
+            float doorMaxY = Mathf.Max(door1.position.y, door2.position.y);
+            float doorCenterX = (door1.position.x + door2.position.x) * 0.5f;
+
+            return IsGroupAtDoor(group, doorMinY, doorMaxY, doorCenterX);
+        }
+
+        private bool IsGroupAtDoor(ItemGroup group, float doorMinY, float doorMaxY, float doorCenterX)
+        {
+            if (group == null)
+                return false;
+
+            PathSample sample = GetPositionAtDistance(group.DistanceAlongPath);
+            float itemY = sample.Position.y;
+            bool itemInsideDoorY = itemY >= doorMinY && itemY <= doorMaxY;
+            bool itemAtGateX = Mathf.Abs(sample.Position.x - doorCenterX) <= itemDoorXTolerance;
+
+            return itemInsideDoorY && itemAtGateX;
+        }
+
 
         private void AbsorbGroup(ItemGroup group, BoxConveyorBelt.ConveyorBox box)
         {
@@ -299,6 +316,10 @@ namespace ConveyorBelt
             box.IsAbsorbing = true;
 
             Sequence sequence = DOTween.Sequence();
+            bool absorptionCanceled = false;
+            ConveyorBeltItem activeAbsorbingItem = null;
+            Transform activeAbsorbingTransform = null;
+            Vector3 activeAbsorbingStartScale = Vector3.one;
             int remainingBoxSlots = boxConveyorBelt.GetRemainingCapacity(box);
             List<ConveyorBeltItem> absorbedItems = group.Items
                 .Where(item => item != null && item.item != null && !item.IsAbsorbed && !item.IsAbsorbing)
@@ -327,11 +348,21 @@ namespace ConveyorBelt
 
                 sequence.AppendCallback(() =>
                 {
+                    if (!IsGroupAtDoor(group))
+                    {
+                        absorptionCanceled = true;
+                        sequence.Kill(false);
+                        return;
+                    }
+
                     if (itemTransform != null)
                     {
                         beltItem.IsAbsorbing = true;
+                        activeAbsorbingItem = beltItem;
+                        activeAbsorbingTransform = itemTransform;
                         localStartPos = itemTransform.position;
                         localStartScale = itemTransform.localScale;
+                        activeAbsorbingStartScale = localStartScale;
                     }
                 });
 
@@ -340,13 +371,25 @@ namespace ConveyorBelt
                     if (itemTransform == null || box == null || box.BoxTransform == null)
                         return;
 
+                    if (!IsGroupAtDoor(group))
+                    {
+                        absorptionCanceled = true;
+                        sequence.Kill(false);
+                        return;
+                    }
+
                     itemTransform.position = Vector3.LerpUnclamped(localStartPos, box.BoxTransform.position, t);
                     itemTransform.localScale = Vector3.LerpUnclamped(localStartScale, Vector3.zero, t);
                 }).SetEase(absorbEase));
                 sequence.AppendCallback(() =>
                 {
+                    if (absorptionCanceled)
+                        return;
+
                     beltItem.IsAbsorbing = false;
                     beltItem.IsAbsorbed = true;
+                    activeAbsorbingItem = null;
+                    activeAbsorbingTransform = null;
                     boxConveyorBelt.StoreBlockInBox(box, itemTransform);
 
                     if (hideAbsorbedItems)
@@ -365,6 +408,23 @@ namespace ConveyorBelt
                     box.IsAbsorbing = false;
 
                 group.IsAbsorbing = false;
+            });
+            sequence.OnKill(() =>
+            {
+                if (!absorptionCanceled)
+                    return;
+
+                if (activeAbsorbingItem != null)
+                    activeAbsorbingItem.IsAbsorbing = false;
+
+                if (activeAbsorbingTransform != null)
+                    activeAbsorbingTransform.localScale = activeAbsorbingStartScale;
+
+                if (!box.IsCompleting)
+                    box.IsAbsorbing = false;
+
+                group.IsAbsorbing = false;
+                PlaceGroups();
             });
         }
 
