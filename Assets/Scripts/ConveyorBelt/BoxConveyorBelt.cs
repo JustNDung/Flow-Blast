@@ -53,7 +53,7 @@ namespace ConveyorBelt
 
         [Header("Panel")]
         [SerializeField] private bool autoCreateSelectionPanel = true;
-        [SerializeField] private Vector3 panelCenter = new Vector3(0f, -4.25f, 0f);
+        [SerializeField] private Vector3 panelCenter = new Vector3(0f, -9.7f, 0f);
         [SerializeField] private Vector2 panelSpacing = new Vector2(1.2f, 0.95f);
         [SerializeField] private ConveyorBelt.ItemColorGroup[] panelColors =
         {
