@@ -46,6 +46,10 @@ namespace ConveyorBelt
         [SerializeField] private bool startWithSceneBoxes = false;
         [SerializeField] private int maxBoxesOnBelt = 5;
 
+        [Header("Gate Match")]
+        [SerializeField] private float boxGateX = 20f;
+        [SerializeField] private float boxGateXTolerance = 0.75f;
+
         [Header("Box Capacity")]
         [SerializeField] private int boxRows = 4;
         [SerializeField] private int boxColumns = 9;
@@ -95,6 +99,7 @@ namespace ConveyorBelt
             speed = Mathf.Max(0f, speed);
             boxSpacing = Mathf.Max(0.01f, boxSpacing);
             maxBoxesOnBelt = Mathf.Max(1, maxBoxesOnBelt);
+            boxGateXTolerance = Mathf.Max(0.01f, boxGateXTolerance);
             boxRows = Mathf.Max(1, boxRows);
             boxColumns = Mathf.Max(1, boxColumns);
             storedBlockSpacing.x = Mathf.Max(0.01f, storedBlockSpacing.x);
@@ -259,7 +264,7 @@ namespace ConveyorBelt
             {
                 ConveyorBox box = boxes[i];
 
-                if (box == null || box.box == null || box.IsAbsorbing || box.IsCompleting)
+                if (box == null || box.box == null || box.IsCompleting)
                     continue;
 
                 box.distanceAlongPath = WrapDistance(box.distanceAlongPath + delta);
@@ -307,8 +312,8 @@ namespace ConveyorBelt
         
         public bool TryGetAlignedBoxInDoorRange(
             ConveyorBelt.ItemColorGroup colorGroup,
-            float doorMinX,
-            float doorMaxX,
+            float doorMinY,
+            float doorMaxY,
             float alignmentTolerance,
             out ConveyorBox matchingBox)
         {
@@ -327,12 +332,11 @@ namespace ConveyorBelt
                     continue;
         
                 PathSample sample = GetPositionAtDistance(box.distanceAlongPath);
-                float boxX = sample.Position.y;
+                float boxY = sample.Position.y;
+                bool inDoorRange = boxY >= doorMinY - alignmentTolerance && boxY <= doorMaxY + alignmentTolerance;
+                bool atBoxGate = Mathf.Abs(sample.Position.x - boxGateX) <= boxGateXTolerance;
         
-                // Kiểm tra box có trong khoảng door và căn chỉnh Y
-                bool inDoorRange = boxX >= doorMinX - alignmentTolerance && boxX <= doorMaxX + alignmentTolerance;
-        
-                if (!inDoorRange)
+                if (!inDoorRange || !atBoxGate)
                     continue;
         
                 matchingBox = box;

@@ -82,12 +82,13 @@ namespace ConveyorBelt
         [SerializeField] private Transform door1;
         [SerializeField] private Transform door2;
         
+        [SerializeField] private float itemDoorXTolerance = 0.75f;
         [SerializeField] private float boxDoorAlignmentTolerance = 0.35f;
         [SerializeField] private BoxConveyorBelt boxConveyorBelt;
 
         [Header("Absorb Animation")]
-        [SerializeField] private float absorbDuration = 0.45f;
-        [SerializeField] private float absorbInterval = 0.06f;
+        [SerializeField] private float absorbDuration = 0.16f;
+        [SerializeField] private float absorbInterval = 0.01f;
         [SerializeField] private Ease absorbEase = Ease.InBack;
         [SerializeField] private bool hideAbsorbedItems = false;
 
@@ -127,6 +128,7 @@ namespace ConveyorBelt
             groupCellSpacing.x = Mathf.Max(0.01f, groupCellSpacing.x);
             groupCellSpacing.y = Mathf.Max(0.01f, groupCellSpacing.y);
             groupSpacing = Mathf.Max(0f, groupSpacing);
+            itemDoorXTolerance = Mathf.Max(0.01f, itemDoorXTolerance);
             boxDoorAlignmentTolerance = Mathf.Max(0.01f, boxDoorAlignmentTolerance);
             absorbDuration = Mathf.Max(0.01f, absorbDuration);
             absorbInterval = Mathf.Max(0f, absorbInterval);
@@ -260,8 +262,9 @@ namespace ConveyorBelt
             if (door1 == null || door2 == null || boxConveyorBelt == null)
                 return;
 
-            float doorMinX = Mathf.Min(door1.position.y, door2.position.y);
-            float doorMaxX = Mathf.Max(door1.position.y, door2.position.y);
+            float doorMinY = Mathf.Min(door1.position.y, door2.position.y);
+            float doorMaxY = Mathf.Max(door1.position.y, door2.position.y);
+            float doorCenterX = (door1.position.x + door2.position.x) * 0.5f;
 
             for (int i = 0; i < groups.Count; i++)
             {
@@ -271,17 +274,19 @@ namespace ConveyorBelt
                     continue;
 
                 PathSample sample = GetPositionAtDistance(group.DistanceAlongPath);
-                float itemX = sample.Position.y;
+                float itemY = sample.Position.y;
+                bool itemInsideDoorY = itemY >= doorMinY && itemY <= doorMaxY;
+                bool itemAtGateX = Mathf.Abs(sample.Position.x - doorCenterX) <= itemDoorXTolerance;
 
                 // Kiểm tra itemGroup có trong khoảng door1-door2 không
-                if (itemX < doorMinX || itemX > doorMaxX)
+                if (!itemInsideDoorY || !itemAtGateX)
                     continue;
 
                 // Tìm box cùng màu trong khoảng door
                 if (!boxConveyorBelt.TryGetAlignedBoxInDoorRange(
                         group.ColorGroup,
-                        doorMinX,
-                        doorMaxX,
+                        doorMinY,
+                        doorMaxY,
                         boxDoorAlignmentTolerance,
                         out BoxConveyorBelt.ConveyorBox box))
                 {
@@ -306,6 +311,13 @@ namespace ConveyorBelt
                 .Take(remainingBoxSlots)
                 .ToList();
 
+            if (absorbedItems.Count == 0)
+            {
+                group.IsAbsorbing = false;
+                box.IsAbsorbing = false;
+                return;
+            }
+
             for (int i = 0; i < absorbedItems.Count; i++)
             {
                 ConveyorBeltItem beltItem = absorbedItems[i];
@@ -316,9 +328,17 @@ namespace ConveyorBelt
                 Transform itemTransform = beltItem.item;
                 beltItem.IsAbsorbing = true;
                 itemTransform.DOKill();
+                Vector3 startPosition = itemTransform.position;
+                Vector3 startScale = itemTransform.localScale;
 
-                sequence.Append(itemTransform.DOMove(box.BoxTransform.position, absorbDuration).SetEase(absorbEase));
-                sequence.Join(itemTransform.DOScale(Vector3.zero, absorbDuration).SetEase(absorbEase));
+                sequence.Append(DOVirtual.Float(0f, 1f, absorbDuration, t =>
+                {
+                    if (itemTransform == null || box == null || box.BoxTransform == null)
+                        return;
+
+                    itemTransform.position = Vector3.LerpUnclamped(startPosition, box.BoxTransform.position, t);
+                    itemTransform.localScale = Vector3.LerpUnclamped(startScale, Vector3.zero, t);
+                }).SetEase(absorbEase));
                 sequence.AppendCallback(() =>
                 {
                     beltItem.IsAbsorbing = false;

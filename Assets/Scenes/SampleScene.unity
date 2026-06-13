@@ -257,6 +257,8 @@ MonoBehaviour:
   applyBoxColors: 1
   startWithSceneBoxes: 0
   maxBoxesOnBelt: 5
+  boxGateX: 20
+  boxGateXTolerance: 0.75
   boxRows: 4
   boxColumns: 9
   storedBlockSpacing: {x: 0.08, y: 0.08}
@@ -1420,10 +1422,11 @@ MonoBehaviour:
   - 2
   door1: {fileID: 1867203263}
   door2: {fileID: 495132121}
+  itemDoorXTolerance: 0.75
   boxDoorAlignmentTolerance: 0.35
   boxConveyorBelt: {fileID: 200001001}
-  absorbDuration: 0.45
-  absorbInterval: 0.06
+  absorbDuration: 0.16
+  absorbInterval: 0.01
   absorbEase: 26
   hideAbsorbedItems: 0
 --- !u!120 &420512269
