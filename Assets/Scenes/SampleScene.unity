@@ -255,6 +255,22 @@ MonoBehaviour:
     IsAbsorbing: 0
   boxSpacing: 2
   applyBoxColors: 1
+  startWithSceneBoxes: 0
+  maxBoxesOnBelt: 5
+  boxRows: 4
+  boxColumns: 9
+  storedBlockSpacing: {x: 0.08, y: 0.08}
+  storedBlockScale: {x: 0.12, y: 0.12, z: 1}
+  autoCreateSelectionPanel: 1
+  panelCenter: {x: 0, y: -4.25, z: 0}
+  panelSpacing: {x: 1.2, y: 0.95}
+  panelColors:
+  - 0
+  - 2
+  - 1
+  - 4
+  - 1
+  - 0
 --- !u!120 &200001002
 LineRenderer:
   serializedVersion: 3
@@ -1387,19 +1403,29 @@ MonoBehaviour:
     currentLerp: 0
     startPoint: 1
     distanceAlongPath: 0
-  groupRows: 2
-  groupColumns: 3
-  groupCellSpacing: {x: 0.8, y: 0.75}
-  groupSpacing: 2
+  groupRows: 4
+  groupColumns: 9
+  groupCellSpacing: {x: 0.18, y: 0.18}
+  groupSpacing: 1.2
   sortItemsByColor: 1
   applyItemColors: 1
+  generateRuntimeLevelGroups: 1
+  generatedColorSequence:
+  - 0
+  - 1
+  - 2
+  - 4
+  - 1
+  - 0
+  - 2
   door1: {fileID: 1867203263}
   door2: {fileID: 495132121}
   boxDoorAlignmentTolerance: 0.35
   boxConveyorBelt: {fileID: 200001001}
   absorbDuration: 0.45
+  absorbInterval: 0.06
   absorbEase: 26
-  hideAbsorbedItems: 1
+  hideAbsorbedItems: 0
 --- !u!120 &420512269
 LineRenderer:
   serializedVersion: 3

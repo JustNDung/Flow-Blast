@@ -29,6 +29,8 @@ namespace ConveyorBelt
             [HideInInspector] public float currentLerp;
             [HideInInspector] public int startPoint;
             [HideInInspector] public float distanceAlongPath;
+            [HideInInspector] public bool IsAbsorbing;
+            [HideInInspector] public bool IsAbsorbed;
         }
 
         public sealed class ItemGroup
@@ -58,12 +60,23 @@ namespace ConveyorBelt
 
         [Header("Groups")]
         [SerializeField] private List<ConveyorBeltItem> items = new List<ConveyorBeltItem>();
-        [SerializeField] private int groupRows = 2;
-        [SerializeField] private int groupColumns = 2;
+        [SerializeField] private int groupRows = 4;
+        [SerializeField] private int groupColumns = 9;
         [SerializeField] private Vector2 groupCellSpacing = new Vector2(0.55f, 0.55f);
         [SerializeField] private float groupSpacing = 0.6f;
         [SerializeField] private bool sortItemsByColor = true;
         [SerializeField] private bool applyItemColors = true;
+        [SerializeField] private bool generateRuntimeLevelGroups = true;
+        [SerializeField] private List<ItemColorGroup> generatedColorSequence = new List<ItemColorGroup>
+        {
+            ItemColorGroup.Red,
+            ItemColorGroup.Yellow,
+            ItemColorGroup.Blue,
+            ItemColorGroup.Purple,
+            ItemColorGroup.Yellow,
+            ItemColorGroup.Red,
+            ItemColorGroup.Blue
+        };
 
         [Header("Door Match")]
         [SerializeField] private Transform door1;
@@ -74,12 +87,15 @@ namespace ConveyorBelt
 
         [Header("Absorb Animation")]
         [SerializeField] private float absorbDuration = 0.45f;
+        [SerializeField] private float absorbInterval = 0.06f;
         [SerializeField] private Ease absorbEase = Ease.InBack;
-        [SerializeField] private bool hideAbsorbedItems = true;
+        [SerializeField] private bool hideAbsorbedItems = false;
 
         private readonly List<float> segmentLengths = new List<float>();
         private readonly List<float> segmentStartDistances = new List<float>();
         private readonly List<ItemGroup> groups = new List<ItemGroup>();
+        private readonly List<Transform> sceneItemTemplates = new List<Transform>();
+        private bool runtimeItemsGenerated;
         private float pathLength;
         private bool pathDirty = true;
 
@@ -97,6 +113,8 @@ namespace ConveyorBelt
 
         private void Awake()
         {
+            CacheSceneItemTemplates();
+            EnsureRuntimeLevelGroups();
             RebuildPath();
             BuildGroups();
         }
@@ -111,6 +129,7 @@ namespace ConveyorBelt
             groupSpacing = Mathf.Max(0f, groupSpacing);
             boxDoorAlignmentTolerance = Mathf.Max(0.01f, boxDoorAlignmentTolerance);
             absorbDuration = Mathf.Max(0.01f, absorbDuration);
+            absorbInterval = Mathf.Max(0f, absorbInterval);
             pathDirty = true;
         }
 
@@ -140,7 +159,7 @@ namespace ConveyorBelt
             if (pathDirty)
                 RebuildPath();
 
-            if (sortItemsByColor)
+            if (sortItemsByColor && !runtimeItemsGenerated)
                 items = items.OrderBy(item => item == null ? ItemColorGroup.Red : item.colorGroup).ToList();
 
             int capacity = groupRows * groupColumns;
@@ -155,6 +174,8 @@ namespace ConveyorBelt
                 if (beltItem == null || beltItem.item == null)
                     continue;
 
+                beltItem.IsAbsorbing = false;
+                beltItem.IsAbsorbed = false;
                 ApplyColor(beltItem);
 
                 bool needsNewGroup =
@@ -220,7 +241,7 @@ namespace ConveyorBelt
                 {
                     ConveyorBeltItem beltItem = group.Items[itemIndex];
 
-                    if (beltItem == null || beltItem.item == null)
+                    if (beltItem == null || beltItem.item == null || beltItem.IsAbsorbing || beltItem.IsAbsorbed)
                         continue;
 
                     beltItem.item.position = sample.Position + GetGridOffset(itemIndex, group.Items.Count, tangent, side);
@@ -246,7 +267,7 @@ namespace ConveyorBelt
             {
                 ItemGroup group = groups[i];
 
-                if (group.IsAbsorbing || group.Items.Count == 0)
+                if (group.IsAbsorbing || group.Items.Count == 0 || GetActiveItemCount(group) == 0)
                     continue;
 
                 PathSample sample = GetPositionAtDistance(group.DistanceAlongPath);
@@ -279,7 +300,11 @@ namespace ConveyorBelt
             box.IsAbsorbing = true;
 
             Sequence sequence = DOTween.Sequence();
-            List<ConveyorBeltItem> absorbedItems = new List<ConveyorBeltItem>(group.Items);
+            int remainingBoxSlots = boxConveyorBelt.GetRemainingCapacity(box);
+            List<ConveyorBeltItem> absorbedItems = group.Items
+                .Where(item => item != null && item.item != null && !item.IsAbsorbed && !item.IsAbsorbing)
+                .Take(remainingBoxSlots)
+                .ToList();
 
             for (int i = 0; i < absorbedItems.Count; i++)
             {
@@ -289,31 +314,107 @@ namespace ConveyorBelt
                     continue;
 
                 Transform itemTransform = beltItem.item;
+                beltItem.IsAbsorbing = true;
                 itemTransform.DOKill();
 
-                sequence.Join(itemTransform.DOMove(box.BoxTransform.position, absorbDuration).SetEase(absorbEase));
+                sequence.Append(itemTransform.DOMove(box.BoxTransform.position, absorbDuration).SetEase(absorbEase));
                 sequence.Join(itemTransform.DOScale(Vector3.zero, absorbDuration).SetEase(absorbEase));
+                sequence.AppendCallback(() =>
+                {
+                    beltItem.IsAbsorbing = false;
+                    beltItem.IsAbsorbed = true;
+                    boxConveyorBelt.StoreBlockInBox(box, itemTransform);
+
+                    if (hideAbsorbedItems)
+                        itemTransform.gameObject.SetActive(false);
+                });
+
+                if (absorbInterval > 0f)
+                    sequence.AppendInterval(absorbInterval);
             }
 
             sequence.OnComplete(() =>
             {
-                for (int i = 0; i < absorbedItems.Count; i++)
-                {
-                    ConveyorBeltItem beltItem = absorbedItems[i];
+                groups.RemoveAll(candidate => GetActiveItemCount(candidate) == 0);
 
-                    if (beltItem == null || beltItem.item == null)
-                        continue;
+                if (!box.IsCompleting)
+                    box.IsAbsorbing = false;
 
-                    beltItem.item.SetParent(box.BoxTransform, true);
-
-                    if (hideAbsorbedItems)
-                        beltItem.item.gameObject.SetActive(false);
-                }
-
-                group.Items.RemoveAll(item => absorbedItems.Contains(item));
-                groups.RemoveAll(candidate => candidate.Items.Count == 0);
-                box.IsAbsorbing = false;
+                group.IsAbsorbing = false;
             });
+        }
+
+        private int GetActiveItemCount(ItemGroup group)
+        {
+            if (group == null)
+                return 0;
+
+            int count = 0;
+
+            for (int i = 0; i < group.Items.Count; i++)
+            {
+                ConveyorBeltItem item = group.Items[i];
+
+                if (item != null && item.item != null && !item.IsAbsorbed)
+                    count++;
+            }
+
+            return count;
+        }
+
+        private void CacheSceneItemTemplates()
+        {
+            sceneItemTemplates.Clear();
+
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i] != null && items[i].item != null && !sceneItemTemplates.Contains(items[i].item))
+                    sceneItemTemplates.Add(items[i].item);
+            }
+        }
+
+        private void EnsureRuntimeLevelGroups()
+        {
+            if (!generateRuntimeLevelGroups || runtimeItemsGenerated || sceneItemTemplates.Count == 0)
+                return;
+
+            Transform prototype = sceneItemTemplates[0];
+
+            if (prototype == null)
+                return;
+
+            for (int i = 0; i < sceneItemTemplates.Count; i++)
+            {
+                if (sceneItemTemplates[i] != null)
+                    sceneItemTemplates[i].gameObject.SetActive(false);
+            }
+
+            items = new List<ConveyorBeltItem>();
+            int blocksPerGroup = groupRows * groupColumns;
+            Transform runtimeRoot = new GameObject("Runtime Item Groups").transform;
+            runtimeRoot.SetParent(transform, true);
+
+            for (int groupIndex = 0; groupIndex < generatedColorSequence.Count; groupIndex++)
+            {
+                ItemColorGroup colorGroup = generatedColorSequence[groupIndex];
+
+                for (int blockIndex = 0; blockIndex < blocksPerGroup; blockIndex++)
+                {
+                    Transform clone = Instantiate(prototype, prototype.position, prototype.rotation, runtimeRoot);
+                    clone.name = $"Item {colorGroup} {groupIndex + 1}-{blockIndex + 1}";
+                    clone.localScale = prototype.localScale;
+                    clone.gameObject.SetActive(true);
+
+                    items.Add(new ConveyorBeltItem
+                    {
+                        item = clone,
+                        colorGroup = colorGroup,
+                        startPoint = 1
+                    });
+                }
+            }
+
+            runtimeItemsGenerated = true;
         }
 
         private void RebuildPath()
