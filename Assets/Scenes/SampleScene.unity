@@ -1311,6 +1311,55 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &344412601
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 344412603}
+  - component: {fileID: 344412602}
+  m_Layer: 0
+  m_Name: LevelSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &344412602
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 344412601}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acb0f098070c41443a6c5b143c558a1f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Core.LevelSpawner
+  _itemPrefab: {fileID: 0}
+  _boxPrefab: {fileID: 0}
+  _panelBoxPrefab: {fileID: 0}
+  _itemParent: {fileID: 0}
+  _boxParent: {fileID: 0}
+--- !u!4 &344412603
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 344412601}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &420512267
 GameObject:
   m_ObjectHideFlags: 0
@@ -1435,8 +1484,6 @@ MonoBehaviour:
   groupSpacing: 1.2
   sortItemsByColor: 1
   applyItemColors: 1
-  generateRuntimeLevelGroups: 1
-  generatedColorSequence: 0000000000000000000000000000000000000000020000000200000002000000020000000200000001000000010000000100000001000000010000000400000004000000040000000400000004000000
   door1: {fileID: 1867203263}
   door2: {fileID: 495132121}
   itemDoorXTolerance: 0.75
@@ -1840,6 +1887,7 @@ MonoBehaviour:
   _conveyorBelt: {fileID: 420512268}
   _boxConveyorBelt: {fileID: 200001001}
   _colorBoxPanel: {fileID: 0}
+  _levelSpawner: {fileID: 0}
   _currentLevelConfig: {fileID: 11400000, guid: 758481a58bc335448bd1663b2059713e, type: 2}
   _abilityDefinitions:
   - {fileID: 11400000, guid: 544670358a23dca4faafc79c5f85e659, type: 2}
@@ -2457,6 +2505,7 @@ SceneRoots:
   m_Roots:
   - {fileID: 519420032}
   - {fileID: 619394802}
+  - {fileID: 344412603}
   - {fileID: 519769968}
   - {fileID: 1893925513}
   - {fileID: 2117541375}

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Abilities;
 using ConveyorBelt;
+using Core;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UI;
@@ -9,7 +10,8 @@ namespace Game
 {
     /// <summary>
     /// Central game orchestrator. Manages level initialization, game state,
-    /// and coordinates between all game systems.
+    /// and coordinates between all game systems. 
+    /// Now delegates item/object spawning to LevelSpawner for cleaner separation.
     /// </summary>
     public class GameManager : MonoBehaviour
     {
@@ -35,6 +37,7 @@ namespace Game
         [SerializeField] private ConveyorBelt.ConveyorBelt _conveyorBelt;
         [SerializeField] private BoxConveyorBelt _boxConveyorBelt;
         [SerializeField] private ColorBoxSelectionPanel _colorBoxPanel;
+        [SerializeField] private LevelSpawner _levelSpawner;
 
         [Header("Level Configuration")]
         [SerializeField] private LevelConfig _currentLevelConfig;
@@ -84,6 +87,7 @@ namespace Game
 
         /// <summary>
         /// Initialize or restart a level with the given configuration.
+        /// Uses LevelSpawner to handle item/box prefab spawning.
         /// </summary>
         public void InitializeLevel(LevelConfig levelConfig = null)
         {
@@ -96,19 +100,25 @@ namespace Game
                 return;
             }
 
-            // 1. Initialize AbilityManager with ability definitions
+            // 1. Spawn runtime items and boxes from level config via LevelSpawner
+            if (_levelSpawner != null)
+            {
+                _levelSpawner.SpawnLevel(_currentLevelConfig);
+            }
+
+            // 2. Initialize AbilityManager with ability definitions
             InitializeAbilities();
 
-            // 2. Set up ConveyorBelt color sequence from level config
+            // 3. Set up ConveyorBelt color sequence from level config
             ConfigureConveyorBelt();
 
-            // 3. Set up BoxConveyorBelt available colors
+            // 4. Set up BoxConveyorBelt available colors
             ConfigureBoxConveyorBelt();
 
-            // 4. Initialize UI state
+            // 5. Initialize UI state
             InitializeUI();
 
-            // 5. Notify that level is ready
+            // 6. Notify that level is ready
             Debug.Log($"[GameManager] Level {_currentLevelConfig.LevelNumber} initialized.");
             OnLevelInitialized?.Invoke();
         }
@@ -125,16 +135,15 @@ namespace Game
             AbilityManager.Instance.Initialize(_abilityDefinitions, context);
 
             // Set the initial charges per level config
-            AbilityManager.Instance.SetCharges(Abilities.AbilityType.Magnet, _currentLevelConfig.MagnetCount);
-            AbilityManager.Instance.SetCharges(Abilities.AbilityType.Hand, _currentLevelConfig.HandCount);
-            AbilityManager.Instance.SetCharges(Abilities.AbilityType.Shuffle, _currentLevelConfig.ShuffleCount);
+            AbilityManager.Instance.SetCharges(AbilityType.Magnet, _currentLevelConfig.MagnetCount);
+            AbilityManager.Instance.SetCharges(AbilityType.Hand, _currentLevelConfig.HandCount);
+            AbilityManager.Instance.SetCharges(AbilityType.Shuffle, _currentLevelConfig.ShuffleCount);
         }
 
         private void ConfigureConveyorBelt()
         {
             if (_conveyorBelt == null)
             {
-                // Try to find one in the scene
                 _conveyorBelt = FindFirstObjectByType<ConveyorBelt.ConveyorBelt>();
                 if (_conveyorBelt == null)
                 {
@@ -143,13 +152,9 @@ namespace Game
                 }
             }
 
-            // Pass the color sequence from level config to the conveyor belt
-            var sequence = _currentLevelConfig.ColorSequence;
+            var sequence = _currentLevelConfig.GetColorSequence();
             if (sequence != null && sequence.Count > 0)
             {
-                // The ConveyorBelt will use its own generatedColorSequence field directly
-                // or you can assign it via serialization. We log what the level expects.
-                // For full dynamic control, the conveyor belt would need a public setter.
                 Debug.Log($"[GameManager] Level {_currentLevelConfig.LevelNumber} expects {sequence.Count} color groups.");
             }
         }
@@ -166,9 +171,7 @@ namespace Game
                 }
             }
 
-            // BoxConveyorBelt handles its own panel creation in Start()
-            // The level config provides the colors to display
-            var availableColors = _currentLevelConfig.AvailableBoxColors;
+            var availableColors = _currentLevelConfig.GetAvailableBoxColors();
             if (availableColors != null && availableColors.Count > 0)
             {
                 Debug.Log($"[GameManager] Box panel configured with {availableColors.Count} color options.");
@@ -227,7 +230,6 @@ namespace Game
         public void RestartLevel()
         {
             Debug.Log("[GameManager] Restarting level...");
-            // TODO: Implement full scene reload or system reset
             UnityEngine.SceneManagement.SceneManager.LoadScene(
                 UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
         }

@@ -319,6 +319,29 @@ namespace ConveyorBelt
             }
         }
 
+        /// <summary>
+        /// Set the runtime boxes list from an external spawner (LevelSpawner).
+        /// Clears existing boxes and replaces them with spawned ones.
+        /// </summary>
+        public void SetRuntimeBoxes(IReadOnlyList<ConveyorBox> runtimeBoxes)
+        {
+            // Deactivate any existing scene box templates
+            for (int i = 0; i < _sceneBoxTemplates.Count; i++)
+            {
+                if (_sceneBoxTemplates[i] != null)
+                    _sceneBoxTemplates[i].gameObject.SetActive(false);
+            }
+
+            boxes = new List<ConveyorBox>(runtimeBoxes);
+            _pathDirty = true;
+
+            // Arrange the new boxes on the path
+            if (isActiveAndEnabled && Application.isPlaying)
+            {
+                ArrangeBoxes();
+            }
+        }
+
         #endregion
 
         #region Helpers

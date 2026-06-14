@@ -58,14 +58,6 @@ namespace ConveyorBelt
         [SerializeField] private float groupSpacing = 0.6f;
         [SerializeField] private bool sortItemsByColor = true;
         [SerializeField] private bool applyItemColors = true;
-        [SerializeField] private bool generateRuntimeLevelGroups = true;
-        [SerializeField] private List<ItemColorGroup> generatedColorSequence = new List<ItemColorGroup>
-        {
-            ItemColorGroup.Red, ItemColorGroup.Red, ItemColorGroup.Red, ItemColorGroup.Red, ItemColorGroup.Red,
-            ItemColorGroup.Blue, ItemColorGroup.Blue, ItemColorGroup.Blue, ItemColorGroup.Blue, ItemColorGroup.Blue,
-            ItemColorGroup.Yellow, ItemColorGroup.Yellow, ItemColorGroup.Yellow, ItemColorGroup.Yellow, ItemColorGroup.Yellow,
-            ItemColorGroup.Purple, ItemColorGroup.Purple, ItemColorGroup.Purple, ItemColorGroup.Purple, ItemColorGroup.Purple
-        };
 
         [Header("Door Match")]
         [SerializeField] private Transform door1;
@@ -475,6 +467,39 @@ namespace ConveyorBelt
 
         #endregion
 
+        #region Public API (for LevelSpawner)
+
+        /// <summary>
+        /// Number of blocks per group (grid capacity). Used by LevelSpawner.
+        /// </summary>
+        public int GroupCapacity => _gridLayout != null ? _gridLayout.Capacity : groupRows * groupColumns;
+
+        /// <summary>
+        /// Set the runtime items list from an external spawner (LevelSpawner).
+        /// Clears any existing items and replaces them with the spawned ones.
+        /// </summary>
+        public void SetRuntimeItems(IReadOnlyList<ConveyorBeltItem> runtimeItems)
+        {
+            // Deactivate any existing scene templates
+            for (int i = 0; i < _sceneItemTemplates.Count; i++)
+            {
+                if (_sceneItemTemplates[i] != null)
+                    _sceneItemTemplates[i].gameObject.SetActive(false);
+            }
+
+            items = new List<ConveyorBeltItem>(runtimeItems);
+            _runtimeItemsGenerated = true;
+            _pathDirty = true;
+
+            // Rebuild groups with new items
+            if (isActiveAndEnabled && Application.isPlaying)
+            {
+                BuildGroups();
+            }
+        }
+
+        #endregion
+
         #region Item Generation
 
         private void CacheSceneItemTemplates()
@@ -490,47 +515,18 @@ namespace ConveyorBelt
 
         private void EnsureRuntimeLevelGroups()
         {
-            if (!generateRuntimeLevelGroups || _runtimeItemsGenerated || _sceneItemTemplates.Count == 0)
-                return;
-
-            Transform prototype = _sceneItemTemplates[0];
-
-            if (prototype == null)
-                return;
-
-            // Deactivate scene templates
-            for (int i = 0; i < _sceneItemTemplates.Count; i++)
+            // Delegate runtime generation to LevelSpawner.
+            // This legacy method is kept as a no-op for backward compatibility.
+            // LevelSpawner calls SetRuntimeItems() to populate the belt.
+            if (_sceneItemTemplates.Count > 0)
             {
-                if (_sceneItemTemplates[i] != null)
-                    _sceneItemTemplates[i].gameObject.SetActive(false);
-            }
-
-            items = new List<ConveyorBeltItem>();
-            int blocksPerGroup = _gridLayout.Capacity;
-            Transform runtimeRoot = new GameObject("Runtime Item Groups").transform;
-            runtimeRoot.SetParent(transform, true);
-
-            for (int groupIndex = 0; groupIndex < generatedColorSequence.Count; groupIndex++)
-            {
-                ItemColorGroup colorGroup = generatedColorSequence[groupIndex];
-
-                for (int blockIndex = 0; blockIndex < blocksPerGroup; blockIndex++)
+                // Deactivate scene templates since they're just placeholders
+                for (int i = 0; i < _sceneItemTemplates.Count; i++)
                 {
-                    Transform clone = Instantiate(prototype, prototype.position, prototype.rotation, runtimeRoot);
-                    clone.name = $"Item {colorGroup} {groupIndex + 1}-{blockIndex + 1}";
-                    clone.localScale = prototype.localScale;
-                    clone.gameObject.SetActive(true);
-
-                    items.Add(new ConveyorBeltItem
-                    {
-                        item = clone,
-                        colorGroup = colorGroup,
-                        startPoint = 1
-                    });
+                    if (_sceneItemTemplates[i] != null)
+                        _sceneItemTemplates[i].gameObject.SetActive(false);
                 }
             }
-
-            _runtimeItemsGenerated = true;
         }
 
         #endregion
