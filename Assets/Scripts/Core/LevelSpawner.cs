@@ -156,17 +156,20 @@ namespace Core
 
                     instance.name = $"Item_{colorGroup}_{groupIndex + 1}_{blockIndex + 1}";
 
-                    // Apply correct color
+                    // Apply correct color using ColorGroupExtensions
                     SpriteRenderer renderer = instance.GetComponent<SpriteRenderer>();
                     if (renderer != null)
                     {
                         renderer.color = colorGroup.ToUnityColor();
                     }
 
+                    // Use integer cast to convert ColorGroup to nested ItemColorGroup
+                    var itemColorGroup = (ConveyorBelt.ConveyorBelt.ItemColorGroup)(int)colorGroup;
+
                     _currentItems.Add(new ConveyorBelt.ConveyorBelt.ConveyorBeltItem
                     {
                         item = instance.transform,
-                        colorGroup = (ConveyorBelt.ConveyorBelt.ItemColorGroup)(int)colorGroup,
+                        colorGroup = itemColorGroup,
                         startPoint = 1,
                         IsAbsorbing = false,
                         IsAbsorbed = false
