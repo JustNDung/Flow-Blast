@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ConveyorBelt.Services;
 using DG.Tweening;
+using UI;
 using UnityEngine;
 
 namespace ConveyorBelt
@@ -362,7 +363,7 @@ namespace ConveyorBelt
             boxes.Clear();
         }
 
-        private bool CanAcceptMoreBoxes()
+        public bool CanAcceptMoreBoxes()
         {
             return boxes.Count + _pendingBoxes < maxBoxesOnBelt;
         }
@@ -412,6 +413,9 @@ namespace ConveyorBelt
             {
                 if (boxTransform != null)
                     Destroy(boxTransform.gameObject);
+
+                // Notify GameManager to check win condition
+                MessageDispatcher.MessageDispatcher.Publish(new BoxCompletedMessage());
             });
         }
 

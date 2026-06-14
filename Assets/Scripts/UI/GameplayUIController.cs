@@ -17,6 +17,7 @@ namespace UI
         private Button _addCoinButton;
 
         private SettingsPopupController _settingsPopup;
+        private ResultPopupController _resultPopup;
 
         // Color selection panel
         private VisualElement _colorPanelInner;
@@ -36,6 +37,11 @@ namespace UI
         public event Action OnBuyCoins;
         public event Action<ColorGroup> OnColorSelected;
 
+        // Result popup events
+        public event Action OnRestartLevel;
+        public event Action OnNextLevel;
+        public event Action OnMainMenu;
+
         public GameplayUIController()
         {
             RegisterCallback<AttachToPanelEvent>(OnAttached);
@@ -48,6 +54,7 @@ namespace UI
             RegisterEvents();
             SubscribeToMessages();
             HideSettingsPopup();
+            HideResultPopup();
         }
 
         private void OnDetached(DetachFromPanelEvent evt)
@@ -65,6 +72,7 @@ namespace UI
             _coinAmount = this.Q<Label>("coin-amount");
             _addCoinButton = this.Q<Button>("add-coin-button");
             _settingsPopup = this.Q<SettingsPopupController>("settings-popup");
+            InitializeResultPopup();
 
             // Do NOT call RebindAbilities() here. OnAttached fires during UIDocument.OnEnable
             // (Awake phase), which is before GameManager.Start. The AbilityManager singleton may
@@ -182,11 +190,13 @@ namespace UI
         private void SubscribeToMessages()
         {
             MessageDispatcher.MessageDispatcher.Subscribe<Audio.SoundSettingChangedMessage>(OnSoundChanged);
+            MessageDispatcher.MessageDispatcher.Subscribe<GameStateMessage>(OnGameStateChanged);
         }
 
         private void UnsubscribeFromMessages()
         {
             MessageDispatcher.MessageDispatcher.Unsubscribe<Audio.SoundSettingChangedMessage>(OnSoundChanged);
+            MessageDispatcher.MessageDispatcher.Unsubscribe<GameStateMessage>(OnGameStateChanged);
         }
 
         private void OnSoundChanged(Audio.SoundSettingChangedMessage message)
@@ -195,6 +205,11 @@ namespace UI
             {
                 // Audio.AudioManager.Instance.PlaySound(uiClickSound);
             }
+        }
+
+        private void OnGameStateChanged(GameStateMessage message)
+        {
+            ShowResultPopup(message.Result);
         }
 
         private void BindToAbilityManager()
@@ -269,6 +284,28 @@ namespace UI
             {
                 OnAbilityUsed?.Invoke(type);
             }
+        }
+
+        private void InitializeResultPopup()
+        {
+            _resultPopup = this.Q<ResultPopupController>("result-popup");
+
+            if (_resultPopup == null)
+                return;
+
+            _resultPopup.OnRestart += () => OnRestartLevel?.Invoke();
+            _resultPopup.OnNextLevel += () => OnNextLevel?.Invoke();
+            _resultPopup.OnMainMenu += () => OnMainMenu?.Invoke();
+        }
+
+        private void ShowResultPopup(GameResult result)
+        {
+            _resultPopup?.Show(result);
+        }
+
+        private void HideResultPopup()
+        {
+            _resultPopup?.Hide();
         }
 
         private void HandleBuyCoins()

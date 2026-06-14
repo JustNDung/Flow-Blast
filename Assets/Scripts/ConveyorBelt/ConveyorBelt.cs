@@ -465,6 +465,32 @@ namespace ConveyorBelt
             });
         }
 
+        /// <summary>
+        /// Returns true if there are NO active items on the belt (all absorbed).
+        /// </summary>
+        public bool HasNoActiveItems()
+        {
+            for (int i = 0; i < _groups.Count; i++)
+            {
+                if (AbsorptionService.GetActiveItemCount(_groups[i].Items, item => item.IsActive) > 0)
+                    return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Returns true if there are still active (non-absorbed) items on the belt.
+        /// </summary>
+        public bool HasActiveItems()
+        {
+            for (int i = 0; i < _groups.Count; i++)
+            {
+                if (AbsorptionService.GetActiveItemCount(_groups[i].Items, item => item.IsActive) > 0)
+                    return true;
+            }
+            return false;
+        }
+
         #endregion
 
         #region Public API (for LevelSpawner)

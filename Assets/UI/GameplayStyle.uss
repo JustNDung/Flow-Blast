@@ -264,3 +264,102 @@
     align-items: center;
     justify-content: center;
 }
+
+/* Result Overlay */
+.result-overlay {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    align-items: center;
+    justify-content: center;
+}
+
+.result-container {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(20, 30, 80, 0.95);
+    border-radius: 20px;
+    padding: 30px 40px;
+    min-width: 280px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.result-icon {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 16px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.win-icon {
+    background-image: url('project://database/Assets/UI/Icons/trophy.png');
+}
+
+.lose-icon {
+    background-image: url('project://database/Assets/UI/Icons/skull.png');
+}
+
+.result-title {
+    font-size: 28px;
+    -unity-font-style: bold;
+    color: white;
+    -unity-text-align: middle-center;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    margin-bottom: 8px;
+}
+
+.result-subtitle {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.8);
+    -unity-text-align: middle-center;
+    margin-bottom: 24px;
+    white-space: normal;
+}
+
+.result-buttons {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.action-button {
+    width: 200px;
+    height: 48px;
+    min-width: 200px;
+    min-height: 48px;
+    border-radius: 24px;
+    border-width: 0;
+    padding: 0;
+    margin: 4px 0;
+    font-size: 18px;
+    -unity-font-style: bold;
+    color: white;
+    -unity-text-align: middle-center;
+    justify-content: center;
+    align-items: center;
+}
+
+.action-button:active {
+    scale: 0.92;
+}
+
+.restart-button {
+    background-color: rgb(72, 140, 200);
+}
+
+.next-level-button {
+    background-color: rgb(100, 200, 100);
+}
+
+.main-menu-button {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.4);
+}

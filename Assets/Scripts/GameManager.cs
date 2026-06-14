@@ -66,6 +66,7 @@ namespace Game
 
             _instance = this;
             DontDestroyOnLoad(gameObject);
+            SubscribeToMessages();
         }
 
         private void Start()
@@ -82,6 +83,22 @@ namespace Game
             {
                 _instance = null;
             }
+            UnsubscribeFromMessages();
+        }
+
+        private void SubscribeToMessages()
+        {
+            MessageDispatcher.MessageDispatcher.Subscribe<BoxCompletedMessage>(OnBoxCompletedMessage);
+        }
+
+        private void UnsubscribeFromMessages()
+        {
+            MessageDispatcher.MessageDispatcher.Unsubscribe<BoxCompletedMessage>(OnBoxCompletedMessage);
+        }
+
+        private void OnBoxCompletedMessage(BoxCompletedMessage message)
+        {
+            OnBoxCompleted();
         }
 
         /// <summary>
@@ -225,6 +242,13 @@ namespace Game
             // Convert Core.ColorGroup to BoxConveyorBelt.ItemColorGroup
             var boxColor = (BoxConveyorBelt.ItemColorGroup)(int)colorGroup;
 
+            // Check lose condition BEFORE adding: if belt is full and items remain, player loses
+            if (!_boxConveyorBelt.CanAcceptMoreBoxes())
+            {
+                CheckLoseCondition();
+                return;
+            }
+
             // Create a temporary box GameObject (mimics what ColorBoxSelectionPanel did)
             GameObject boxObject = new GameObject($"Panel Box {colorGroup}");
             boxObject.transform.position = new Vector3(0f, -9.7f, 0f); // match old panelCenter
@@ -259,8 +283,39 @@ namespace Game
         /// </summary>
         public void OnBoxCompleted()
         {
-            Debug.Log("[GameManager] Box completed! Check for victory condition.");
-            // TODO: Implement victory condition logic
+            Debug.Log("[GameManager] Box completed! Check for win condition.");
+            CheckWinCondition();
+        }
+
+        /// <summary>
+        /// Check if all items on the conveyor belt have been absorbed (Win).
+        /// </summary>
+        public void CheckWinCondition()
+        {
+            if (_conveyorBelt == null)
+                return;
+
+            // Win when all items are absorbed (no active groups with items left)
+            if (_conveyorBelt.HasNoActiveItems())
+            {
+                EndGame(true);
+            }
+        }
+
+        /// <summary>
+        /// Check if the player has lost (box belt full + items still remaining).
+        /// Called when a player tries to add a box but the belt is full.
+        /// </summary>
+        public void CheckLoseCondition()
+        {
+            if (_conveyorBelt == null || _boxConveyorBelt == null)
+                return;
+
+            // Lose when box belt is at max capacity AND there are still unabsorbed items
+            if (!_boxConveyorBelt.CanAcceptMoreBoxes() && _conveyorBelt.HasActiveItems())
+            {
+                EndGame(false);
+            }
         }
 
         /// <summary>
@@ -270,6 +325,10 @@ namespace Game
         {
             Debug.Log($"[GameManager] Game ended. Victory: {victory}");
             OnGameEnded?.Invoke(victory);
+
+            // Publish result message for UI
+            MessageDispatcher.MessageDispatcher.Publish(new GameStateMessage(
+                victory ? GameResult.Win : GameResult.Lose));
         }
 
         /// <summary>
