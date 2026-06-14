@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Abilities;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -7,31 +9,23 @@ namespace UI
     [UxmlElement]
     public partial class GameplayUIController : VisualElement
     {
-
         private Button _settingsButton;
         private Label _levelLabel;
         private Label _coinAmount;
         private Button _addCoinButton;
 
-        private Button _magnetButton;
-        private Button _handButton;
-        private Button _shuffleButton;
-
-        private Label _magnetCount;
-        private Label _handCount;
-        private Label _shuffleCount;
-
         private SettingsPopupController _settingsPopup;
+
+        // Ability UI elements - dynamically bound via data
+        private readonly Dictionary<AbilityType, AbilityBinding> _abilityBindings = new();
 
         private int _currentLevel = 1;
         private int _coins = 300;
-        private int _magnetAbilityCount = 1;
-        private int _handAbilityCount = 1;
-        private int _shuffleAbilityCount = 1;
 
-        public event Action OnMagnetUsed;
-        public event Action OnHandUsed;
-        public event Action OnShuffleUsed;
+        // Auto-subscribe to AbilityManager events
+        private bool _isInitialized;
+
+        public event Action<AbilityType> OnAbilityUsed;
         public event Action OnBuyCoins;
 
         public GameplayUIController()
@@ -45,15 +39,18 @@ namespace UI
             InitializeUI();
             RegisterEvents();
             SubscribeToMessages();
+            BindToAbilityManager();
             UpdateUI();
-
             HideSettingsPopup();
+            _isInitialized = true;
         }
 
         private void OnDetached(DetachFromPanelEvent evt)
         {
             UnregisterEvents();
             UnsubscribeFromMessages();
+            UnbindFromAbilityManager();
+            _isInitialized = false;
         }
 
         private void InitializeUI()
@@ -62,16 +59,31 @@ namespace UI
             _levelLabel = this.Q<Label>("level-label");
             _coinAmount = this.Q<Label>("coin-amount");
             _addCoinButton = this.Q<Button>("add-coin-button");
-
-            _magnetButton = this.Q<Button>("magnet-button");
-            _handButton = this.Q<Button>("hand-button");
-            _shuffleButton = this.Q<Button>("shuffle-button");
-
-            _magnetCount = this.Q<Label>("magnet-count");
-            _handCount = this.Q<Label>("hand-count");
-            _shuffleCount = this.Q<Label>("shuffle-count");
-
             _settingsPopup = this.Q<SettingsPopupController>("settings-popup");
+
+            // Build ability bindings dynamically from all registered ability definitions
+            _abilityBindings.Clear();
+            var definitions = AbilityManager.Instance.GetAllDefinitions();
+            foreach (var definition in definitions)
+            {
+                var container = this.Q<VisualElement>(definition.UIContainerName);
+                var button = this.Q<Button>(definition.UIButtonName);
+                var countLabel = this.Q<Label>(definition.UICountLabelName);
+
+                if (container == null)
+                {
+                    Debug.LogWarning($"[GameplayUI] UI container '{definition.UIContainerName}' not found for {definition.AbilityName}. Skipping.");
+                    continue;
+                }
+
+                _abilityBindings[definition.AbilityType] = new AbilityBinding
+                {
+                    Definition = definition,
+                    Container = container,
+                    Button = button,
+                    CountLabel = countLabel
+                };
+            }
         }
 
         private void RegisterEvents()
@@ -79,16 +91,23 @@ namespace UI
             _settingsButton.clicked += ShowSettingsPopup;
             _addCoinButton.clicked += HandleBuyCoins;
 
-            _magnetButton.clicked += UseMagnetAbility;
-            _handButton.clicked += UseHandAbility;
-            _shuffleButton.clicked += UseShuffleAbility;
-
             if (_settingsPopup != null)
             {
                 _settingsPopup.OnClose += HideSettingsPopup;
                 _settingsPopup.OnRetry += HandleRetry;
                 _settingsPopup.OnRestore += HandleRestore;
                 _settingsPopup.OnRate += HandleRate;
+            }
+
+            // Register ability button clicks from bindings
+            foreach (var kvp in _abilityBindings)
+            {
+                var binding = kvp.Value;
+                if (binding.Button != null)
+                {
+                    var abilityType = kvp.Key; // capture for closure
+                    binding.Button.clicked += () => UseAbility(abilityType);
+                }
             }
         }
 
@@ -98,10 +117,6 @@ namespace UI
             {
                 _settingsButton.clicked -= ShowSettingsPopup;
                 _addCoinButton.clicked -= HandleBuyCoins;
-
-                _magnetButton.clicked -= UseMagnetAbility;
-                _handButton.clicked -= UseHandAbility;
-                _shuffleButton.clicked -= UseShuffleAbility;
             }
 
             if (_settingsPopup != null)
@@ -110,6 +125,16 @@ namespace UI
                 _settingsPopup.OnRetry -= HandleRetry;
                 _settingsPopup.OnRestore -= HandleRestore;
                 _settingsPopup.OnRate -= HandleRate;
+            }
+
+            foreach (var kvp in _abilityBindings)
+            {
+                var binding = kvp.Value;
+                if (binding.Button != null)
+                {
+                    var abilityType = kvp.Key; // capture for closure
+                    binding.Button.clicked -= () => UseAbility(abilityType);
+                }
             }
         }
 
@@ -125,10 +150,30 @@ namespace UI
 
         private void OnSoundChanged(Audio.SoundSettingChangedMessage message)
         {
-            // Play UI sound feedback if enabled
             if (message.Enabled)
             {
                 // Audio.AudioManager.Instance.PlaySound(uiClickSound);
+            }
+        }
+
+        private void BindToAbilityManager()
+        {
+            AbilityManager.Instance.OnCountChanged += OnAbilityCountChanged;
+        }
+
+        private void UnbindFromAbilityManager()
+        {
+            if (_isInitialized)
+            {
+                AbilityManager.Instance.OnCountChanged -= OnAbilityCountChanged;
+            }
+        }
+
+        private void OnAbilityCountChanged(AbilityType type, int newCount)
+        {
+            if (_abilityBindings.TryGetValue(type, out var binding))
+            {
+                UpdateAbilityUI(binding);
             }
         }
 
@@ -138,13 +183,25 @@ namespace UI
 
             _levelLabel.text = $"LEVEL {_currentLevel}";
             _coinAmount.text = _coins.ToString();
-            _magnetCount.text = _magnetAbilityCount.ToString();
-            _handCount.text = _handAbilityCount.ToString();
-            _shuffleCount.text = _shuffleAbilityCount.ToString();
 
-            _magnetButton.SetEnabled(_magnetAbilityCount > 0);
-            _handButton.SetEnabled(_handAbilityCount > 0);
-            _shuffleButton.SetEnabled(_shuffleAbilityCount > 0);
+            // Update all ability UI from manager data
+            foreach (var kvp in _abilityBindings)
+            {
+                UpdateAbilityUI(kvp.Value);
+            }
+        }
+
+        private void UpdateAbilityUI(AbilityBinding binding)
+        {
+            if (binding.CountLabel == null) return;
+
+            var count = AbilityManager.Instance.GetCount(binding.Definition.AbilityType);
+            binding.CountLabel.text = count.ToString();
+
+            if (binding.Button != null)
+            {
+                binding.Button.SetEnabled(count > 0);
+            }
         }
 
         private void ShowSettingsPopup()
@@ -165,34 +222,12 @@ namespace UI
             }
         }
 
-        private void UseMagnetAbility()
+        private void UseAbility(AbilityType type)
         {
-            if (_magnetAbilityCount <= 0) return;
-
-            _magnetAbilityCount--;
-            UpdateUI();
-            OnMagnetUsed?.Invoke();
-            MessageDispatcher.MessageDispatcher.Publish(new AbilityUsedMessage(AbilityType.Magnet));
-        }
-
-        private void UseHandAbility()
-        {
-            if (_handAbilityCount <= 0) return;
-
-            _handAbilityCount--;
-            UpdateUI();
-            OnHandUsed?.Invoke();
-            MessageDispatcher.MessageDispatcher.Publish(new AbilityUsedMessage(AbilityType.Hand));
-        }
-
-        private void UseShuffleAbility()
-        {
-            if (_shuffleAbilityCount <= 0) return;
-
-            _shuffleAbilityCount--;
-            UpdateUI();
-            OnShuffleUsed?.Invoke();
-            MessageDispatcher.MessageDispatcher.Publish(new AbilityUsedMessage(AbilityType.Shuffle));
+            if (AbilityManager.Instance.TryUseAbility(type))
+            {
+                OnAbilityUsed?.Invoke(type);
+            }
         }
 
         private void HandleBuyCoins()
@@ -238,28 +273,23 @@ namespace UI
             MessageDispatcher.MessageDispatcher.Publish(new CoinChangedMessage(-(oldCoins - _coins), _coins));
         }
 
+        /// <summary>
+        /// Add ability charges via the AbilityManager.
+        /// </summary>
         public void AddAbility(AbilityType type, int count = 1)
         {
-            switch (type)
-            {
-                case AbilityType.Magnet:
-                    _magnetAbilityCount += count;
-                    break;
-                case AbilityType.Hand:
-                    _handAbilityCount += count;
-                    break;
-                case AbilityType.Shuffle:
-                    _shuffleAbilityCount += count;
-                    break;
-            }
-            UpdateUI();
+            AbilityManager.Instance.AddCharges(type, count);
         }
-    }
 
-    public enum AbilityType
-    {
-        Magnet,
-        Hand,
-        Shuffle
+        /// <summary>
+        /// Internal binding data for a single ability in the UI.
+        /// </summary>
+        private class AbilityBinding
+        {
+            public AbilityDefinition Definition;
+            public VisualElement Container;
+            public Button Button;
+            public Label CountLabel;
+        }
     }
 }

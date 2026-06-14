@@ -1,3 +1,5 @@
+using Abilities;
+
 namespace UI
 {
     public readonly struct AbilityUsedMessage : MessageDispatcher.IMessage
