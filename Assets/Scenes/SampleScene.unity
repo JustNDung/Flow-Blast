@@ -495,7 +495,7 @@ MonoBehaviour:
   absorbDuration: 0.16
   absorbInterval: 0.01
   absorbEase: 26
-  hideAbsorbedItems: 0
+  hideAbsorbedItems: 1
 --- !u!120 &420512269
 LineRenderer:
   serializedVersion: 3
@@ -890,7 +890,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.GameManager
   _conveyorBelt: {fileID: 420512268}
   _boxConveyorBelt: {fileID: 200001001}
-  _colorBoxPanel: {fileID: 0}
   _levelSpawner: {fileID: 344412602}
   _currentLevelConfig: {fileID: 11400000, guid: 758481a58bc335448bd1663b2059713e, type: 2}
   _abilityDefinitions:

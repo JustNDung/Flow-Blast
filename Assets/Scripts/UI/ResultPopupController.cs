@@ -34,7 +34,11 @@ namespace UI
             _mainMenuButton = this.Q<Button>("main-menu-button");
 
             if (_restartButton != null)
-                _restartButton.clicked += () => OnRestart?.Invoke();
+                _restartButton.clicked += () =>
+                {
+                    MessageDispatcher.MessageDispatcher.Publish(new RestartLevelMessage());
+                    OnRestart?.Invoke();
+                };
 
             if (_nextLevelButton != null)
                 _nextLevelButton.clicked += () => OnNextLevel?.Invoke();

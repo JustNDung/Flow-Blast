@@ -191,12 +191,19 @@ namespace UI
         {
             MessageDispatcher.MessageDispatcher.Subscribe<Audio.SoundSettingChangedMessage>(OnSoundChanged);
             MessageDispatcher.MessageDispatcher.Subscribe<GameStateMessage>(OnGameStateChanged);
+            MessageDispatcher.MessageDispatcher.Subscribe<RestartLevelMessage>(OnRestartLevelMessage);
         }
 
         private void UnsubscribeFromMessages()
         {
             MessageDispatcher.MessageDispatcher.Unsubscribe<Audio.SoundSettingChangedMessage>(OnSoundChanged);
             MessageDispatcher.MessageDispatcher.Unsubscribe<GameStateMessage>(OnGameStateChanged);
+            MessageDispatcher.MessageDispatcher.Unsubscribe<RestartLevelMessage>(OnRestartLevelMessage);
+        }
+
+        private void OnRestartLevelMessage(RestartLevelMessage message)
+        {
+            HideResultPopup();
         }
 
         private void OnSoundChanged(Audio.SoundSettingChangedMessage message)

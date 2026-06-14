@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Abilities;
 using ConveyorBelt;
@@ -11,7 +12,6 @@ namespace Game
     /// <summary>
     /// Central game orchestrator. Manages level initialization, game state,
     /// and coordinates between all game systems. 
-    /// Now delegates item/object spawning to LevelSpawner for cleaner separation.
     /// </summary>
     public class GameManager : MonoBehaviour
     {
@@ -44,15 +44,8 @@ namespace Game
         [Header("Ability Definitions")]
         [SerializeField] private AbilityDefinition[] _abilityDefinitions;
 
-        /// <summary>
-        /// Fired when a level has been fully initialized and is ready to play.
-        /// </summary>
         public event System.Action OnLevelInitialized;
-
-        /// <summary>
-        /// Fired when the game round ends.
-        /// </summary>
-        public event System.Action<bool> OnGameEnded; // true = victory
+        public event System.Action<bool> OnGameEnded;
 
         public LevelConfig CurrentLevelConfig => _currentLevelConfig;
 
@@ -73,7 +66,7 @@ namespace Game
         {
             if (_currentLevelConfig != null)
             {
-                InitializeLevel();
+                StartCoroutine(InitializeAfterUIDocumentReady());
             }
         }
 
@@ -86,14 +79,25 @@ namespace Game
             UnsubscribeFromMessages();
         }
 
+        private IEnumerator InitializeAfterUIDocumentReady()
+        {
+            // Wait 2 frames to ensure UIDocument and all UI toolkit elements are fully constructed
+            yield return null;
+            yield return null;
+
+            InitializeLevel();
+        }
+
         private void SubscribeToMessages()
         {
             MessageDispatcher.MessageDispatcher.Subscribe<BoxCompletedMessage>(OnBoxCompletedMessage);
+            MessageDispatcher.MessageDispatcher.Subscribe<RestartLevelMessage>(OnRestartLevelMessage);
         }
 
         private void UnsubscribeFromMessages()
         {
             MessageDispatcher.MessageDispatcher.Unsubscribe<BoxCompletedMessage>(OnBoxCompletedMessage);
+            MessageDispatcher.MessageDispatcher.Unsubscribe<RestartLevelMessage>(OnRestartLevelMessage);
         }
 
         private void OnBoxCompletedMessage(BoxCompletedMessage message)
@@ -101,9 +105,13 @@ namespace Game
             OnBoxCompleted();
         }
 
+        private void OnRestartLevelMessage(RestartLevelMessage message)
+        {
+            RestartLevel();
+        }
+
         /// <summary>
-        /// Initialize or restart a level with the given configuration.
-        /// Uses LevelSpawner to handle item/box prefab spawning.
+        /// Initialize or restart a level.
         /// </summary>
         public void InitializeLevel(LevelConfig levelConfig = null)
         {
@@ -116,27 +124,30 @@ namespace Game
                 return;
             }
 
-            // 1. Spawn runtime items and boxes from level config via LevelSpawner
+            // 1. Re-find scene references (they might be stale after restart)
+            RefreshSceneReferences();
+
+            // 2. Spawn runtime items via LevelSpawner
             if (_levelSpawner != null)
             {
                 _levelSpawner.SpawnLevel(_currentLevelConfig);
             }
 
-            // 2. Initialize AbilityManager with ability definitions
+            // 3. Initialize AbilityManager
             InitializeAbilities();
 
-            // 3. Set up ConveyorBelt color sequence from level config
-            ConfigureConveyorBelt();
-
-            // 4. Set up BoxConveyorBelt available colors
-            ConfigureBoxConveyorBelt();
-
-            // 5. Initialize UI state
+            // 4. Initialize UI
             InitializeUI();
 
-            // 6. Notify that level is ready
             Debug.Log($"[GameManager] Level {_currentLevelConfig.LevelNumber} initialized.");
             OnLevelInitialized?.Invoke();
+        }
+
+        private void RefreshSceneReferences()
+        {
+            _conveyorBelt = FindFirstObjectByType<ConveyorBelt.ConveyorBelt>();
+            _boxConveyorBelt = FindFirstObjectByType<BoxConveyorBelt>();
+            _levelSpawner = FindFirstObjectByType<LevelSpawner>();
         }
 
         private void InitializeAbilities()
@@ -149,49 +160,9 @@ namespace Game
 
             var context = new AbilityExecutionContext();
             AbilityManager.Instance.Initialize(_abilityDefinitions, context);
-
-            // Set the initial charges per level config
             AbilityManager.Instance.SetCharges(AbilityType.Magnet, _currentLevelConfig.MagnetCount);
             AbilityManager.Instance.SetCharges(AbilityType.Hand, _currentLevelConfig.HandCount);
             AbilityManager.Instance.SetCharges(AbilityType.Shuffle, _currentLevelConfig.ShuffleCount);
-        }
-
-        private void ConfigureConveyorBelt()
-        {
-            if (_conveyorBelt == null)
-            {
-                _conveyorBelt = FindFirstObjectByType<ConveyorBelt.ConveyorBelt>();
-                if (_conveyorBelt == null)
-                {
-                    Debug.LogWarning("[GameManager] No ConveyorBelt found in scene.");
-                    return;
-                }
-            }
-
-            var sequence = _currentLevelConfig.GetColorSequence();
-            if (sequence != null && sequence.Count > 0)
-            {
-                Debug.Log($"[GameManager] Level {_currentLevelConfig.LevelNumber} expects {sequence.Count} color groups.");
-            }
-        }
-
-        private void ConfigureBoxConveyorBelt()
-        {
-            if (_boxConveyorBelt == null)
-            {
-                _boxConveyorBelt = FindFirstObjectByType<BoxConveyorBelt>();
-                if (_boxConveyorBelt == null)
-                {
-                    Debug.LogWarning("[GameManager] No BoxConveyorBelt found in scene.");
-                    return;
-                }
-            }
-
-            var availableColors = _currentLevelConfig.GetAvailableBoxColors();
-            if (availableColors != null && availableColors.Count > 0)
-            {
-                Debug.Log($"[GameManager] Box panel configured with {availableColors.Count} color options.");
-            }
         }
 
         private GameplayUIController FindGameplayUIController()
@@ -214,19 +185,14 @@ namespace Game
                 return;
             }
 
-            // Initialize runtime state that depends on AbilityManager
             uiController.InitializeRuntime();
-
-            // Set initial UI state
             uiController.SetLevel(_currentLevelConfig.LevelNumber);
             uiController.AddCoins(_currentLevelConfig.InitialCoins);
 
-            // Initialize color selection panel with UI Toolkit
             var availableColors = _currentLevelConfig.GetAvailableBoxColors();
             if (_boxConveyorBelt != null && availableColors != null)
             {
                 uiController.InitializeColorPanel(_boxConveyorBelt, availableColors);
-                // Prevent duplicate subscriptions on re-initialization
                 uiController.OnColorSelected -= OnColorButtonSelected;
                 uiController.OnColorSelected += OnColorButtonSelected;
             }
@@ -239,26 +205,22 @@ namespace Game
             if (_boxConveyorBelt == null)
                 return;
 
-            // Convert Core.ColorGroup to BoxConveyorBelt.ItemColorGroup
             var boxColor = (BoxConveyorBelt.ItemColorGroup)(int)colorGroup;
 
-            // Check lose condition BEFORE adding: if belt is full and items remain, player loses
             if (!_boxConveyorBelt.CanAcceptMoreBoxes())
             {
                 CheckLoseCondition();
                 return;
             }
 
-            // Create a temporary box GameObject (mimics what ColorBoxSelectionPanel did)
             GameObject boxObject = new GameObject($"Panel Box {colorGroup}");
-            boxObject.transform.position = new Vector3(0f, -9.7f, 0f); // match old panelCenter
+            boxObject.transform.position = new Vector3(0f, -9.7f, 0f);
 
             SpriteRenderer renderer = boxObject.AddComponent<SpriteRenderer>();
             renderer.sprite = GetPanelBoxSprite();
             colorGroup.ApplyTo(renderer);
             renderer.sortingOrder = 2;
 
-            // Try to add it to the belt (TryAddBoxFromPanel checks capacity internally)
             bool accepted = _boxConveyorBelt.TryAddBoxFromPanel(boxObject.transform, boxColor);
 
             if (!accepted)
@@ -278,67 +240,64 @@ namespace Game
             return _panelBoxSprite;
         }
 
-        /// <summary>
-        /// Called when a box is completed (reaches 100% fill).
-        /// </summary>
         public void OnBoxCompleted()
         {
             Debug.Log("[GameManager] Box completed! Check for win condition.");
             CheckWinCondition();
         }
 
-        /// <summary>
-        /// Check if all items on the conveyor belt have been absorbed (Win).
-        /// </summary>
         public void CheckWinCondition()
         {
             if (_conveyorBelt == null)
                 return;
 
-            // Win when all items are absorbed (no active groups with items left)
             if (_conveyorBelt.HasNoActiveItems())
             {
                 EndGame(true);
             }
         }
 
-        /// <summary>
-        /// Check if the player has lost (box belt full + items still remaining).
-        /// Called when a player tries to add a box but the belt is full.
-        /// </summary>
         public void CheckLoseCondition()
         {
             if (_conveyorBelt == null || _boxConveyorBelt == null)
                 return;
 
-            // Lose when box belt is at max capacity AND there are still unabsorbed items
             if (!_boxConveyorBelt.CanAcceptMoreBoxes() && _conveyorBelt.HasActiveItems())
             {
                 EndGame(false);
             }
         }
 
-        /// <summary>
-        /// End the current game round.
-        /// </summary>
         public void EndGame(bool victory)
         {
             Debug.Log($"[GameManager] Game ended. Victory: {victory}");
             OnGameEnded?.Invoke(victory);
-
-            // Publish result message for UI
             MessageDispatcher.MessageDispatcher.Publish(new GameStateMessage(
                 victory ? GameResult.Win : GameResult.Lose));
         }
 
         /// <summary>
-        /// Reset and restart the current level.
+        /// Reset and restart the current level WITHOUT scene reload.
+        /// Just reset all systems in-place so UI references stay valid.
         /// </summary>
         public void RestartLevel()
         {
-            Debug.Log("[GameManager] Restarting level...");
-            UnityEngine.SceneManagement.SceneManager.LoadScene(
-                UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+            Debug.Log("[GameManager] Restarting level in-place...");
+
+            // Clear spawned items and boxes
+            if (_levelSpawner != null)
+            {
+                _levelSpawner.ClearSpawned();
+            }
+
+            // Clear boxes on conveyor belt
+            if (_boxConveyorBelt != null)
+            {
+                _boxConveyorBelt.ClearAllBoxes();
+            }
+
+            // Re-initialize everything
+            InitializeLevel();
         }
 
 #if UNITY_EDITOR

@@ -368,6 +368,20 @@ namespace ConveyorBelt
             return boxes.Count + _pendingBoxes < maxBoxesOnBelt;
         }
 
+        /// <summary>
+        /// Clear all boxes from the belt. Used when restarting a level in-place.
+        /// </summary>
+        public void ClearAllBoxes()
+        {
+            for (int i = boxes.Count - 1; i >= 0; i--)
+            {
+                if (boxes[i] != null && boxes[i].box != null)
+                    Destroy(boxes[i].box.gameObject);
+            }
+            boxes.Clear();
+            _pendingBoxes = 0;
+        }
+
         private int GetRowCapacity()
         {
             return Mathf.Max(1, Mathf.CeilToInt(1f / fillPerItemRow));
