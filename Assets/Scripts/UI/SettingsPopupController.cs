@@ -1,5 +1,4 @@
 ﻿using System;
-using UnityEngine;
 using UnityEngine.UIElements;
 using Audio;
 
@@ -132,6 +131,9 @@ namespace UI
         private void RefreshStates()
         {
             if (_soundButton == null || _musicButton == null || _vibrateButton == null)
+                return;
+
+            if (AudioManager.Instance == null)
                 return;
 
             SetToggleClass(_soundButton, AudioManager.Instance.SoundEnabled);

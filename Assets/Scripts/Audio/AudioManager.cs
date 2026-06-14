@@ -11,9 +11,12 @@ namespace Audio
             {
                 if (_instance == null)
                 {
-                    var go = new GameObject("AudioManager");
-                    _instance = go.AddComponent<AudioManager>();
-                    DontDestroyOnLoad(go);
+                    if (Application.isPlaying)
+                    {
+                        var go = new GameObject("AudioManager");
+                        _instance = go.AddComponent<AudioManager>();
+                        DontDestroyOnLoad(go);
+                    }
                 }
                 return _instance;
             }
