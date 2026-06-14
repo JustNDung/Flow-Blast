@@ -2,15 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ConveyorBelt.Services;
-using Core;
 using DG.Tweening;
 using UnityEngine;
 
 namespace ConveyorBelt
 {
-    public class ConveyorBelt : BeltBase
+    public class ConveyorBelt : MonoBehaviour
     {
-        // Preserved for backward compatibility with serialized scene data and Inspector references
         public enum ItemColorGroup
         {
             Red,
@@ -47,6 +45,11 @@ namespace ConveyorBelt
             public bool IsAbsorbing;
         }
 
+        [Header("Path")]
+        [SerializeField] private LineRenderer lineRenderer;
+        [SerializeField] private float speed = 2f;
+        [SerializeField] private bool faceDirection = true;
+
         [Header("Groups")]
         [SerializeField] private List<ConveyorBeltItem> items = new List<ConveyorBeltItem>();
         [SerializeField] private int groupRows = 4;
@@ -69,15 +72,16 @@ namespace ConveyorBelt
         [SerializeField] private bool hideAbsorbedItems = false;
 
         // Services
+        private PathSystem _pathSystem;
         private GridLayoutService _gridLayout;
         private AbsorptionService _absorptionService;
 
         private readonly List<ItemGroup> _groups = new List<ItemGroup>();
         private readonly List<Transform> _sceneItemTemplates = new List<Transform>();
         private bool _runtimeItemsGenerated;
+        private bool _pathDirty = true;
 
         // Backward-compatible static accessor for external references (e.g., ColorBoxSelectionPanel)
-        [Obsolete("Use ColorGroupExtensions.ToUnityColor() or ColorService instead.")]
         public static readonly Dictionary<ItemColorGroup, Color> GroupColors = new Dictionary<ItemColorGroup, Color>
         {
             { ItemColorGroup.Red, new Color(1f, 0.18f, 0.15f) },
@@ -92,25 +96,36 @@ namespace ConveyorBelt
 
         private void Awake()
         {
-            InitializeConveyorServices();
-            SetupBeltBase();
+            InitializeServices();
+            CacheSceneItemTemplates();
             EnsureRuntimeLevelGroups();
+
+            if (_pathDirty)
+                _pathSystem.RebuildPath(lineRenderer);
+
             BuildGroups();
         }
 
-        private void InitializeConveyorServices()
+        private void InitializeServices()
         {
+            // Initialize PathSystem
+            _pathSystem = new PathSystem();
+            if (lineRenderer != null && lineRenderer.positionCount >= 2)
+                _pathSystem.RebuildPath(lineRenderer);
+
             // Initialize GridLayoutService
             _gridLayout = new GridLayoutService(groupRows, groupColumns, groupCellSpacing, groupSpacing);
 
             // Initialize AbsorptionService
             _absorptionService = new AbsorptionService();
-            _absorptionService.Initialize(door1, door2, itemDoorXTolerance, pathSystem);
+            _absorptionService.Initialize(door1, door2, itemDoorXTolerance, _pathSystem);
+
+            _pathDirty = _pathSystem.IsPathDirty;
         }
 
-        protected override void OnValidate()
+        private void OnValidate()
         {
-            base.OnValidate();
+            speed = Mathf.Max(0f, speed);
             groupRows = Mathf.Max(1, groupRows);
             groupColumns = Mathf.Max(1, groupColumns);
             groupCellSpacing.x = Mathf.Max(0.01f, groupCellSpacing.x);
@@ -119,10 +134,23 @@ namespace ConveyorBelt
             itemDoorXTolerance = Mathf.Max(0.01f, itemDoorXTolerance);
             absorbDuration = Mathf.Max(0.01f, absorbDuration);
             absorbInterval = Mathf.Max(0f, absorbInterval);
+            _pathDirty = true;
         }
 
-        protected override void UpdateBelt()
+        private void Update()
         {
+            if (lineRenderer == null || lineRenderer.positionCount < 2)
+                return;
+
+            if (_pathDirty || _pathSystem.IsPathDirty)
+            {
+                _pathSystem.RebuildPath(lineRenderer);
+                _pathDirty = false;
+            }
+
+            if (_pathSystem.PathLength <= 0.0001f)
+                return;
+
             MoveGroups();
             TryAbsorbAtDoor();
         }
@@ -137,7 +165,11 @@ namespace ConveyorBelt
             if (items == null || items.Count == 0)
                 return;
 
-            RebuildPathIfNeeded();
+            if (_pathDirty || _pathSystem.IsPathDirty)
+            {
+                _pathSystem.RebuildPath(lineRenderer);
+                _pathDirty = false;
+            }
 
             // Sort items by color if applicable (only for scene-placed items, not runtime generated)
             if (sortItemsByColor && !_runtimeItemsGenerated)
@@ -157,7 +189,7 @@ namespace ConveyorBelt
 
                 beltItem.IsAbsorbing = false;
                 beltItem.IsAbsorbed = false;
-                ApplyItemColor(beltItem);
+                ApplyColor(beltItem);
 
                 bool needsNewGroup =
                     activeGroup == null ||
@@ -172,7 +204,7 @@ namespace ConveyorBelt
                     activeGroup = new ItemGroup
                     {
                         ColorGroup = beltItem.colorGroup,
-                        DistanceAlongPath = pathSystem.WrapDistance(cursor)
+                        DistanceAlongPath = _pathSystem.WrapDistance(cursor)
                     };
                     activeColor = beltItem.colorGroup;
                     _groups.Add(activeGroup);
@@ -193,7 +225,7 @@ namespace ConveyorBelt
             {
                 ItemGroup group = _groups[i];
 
-                group.DistanceAlongPath = pathSystem.WrapDistance(group.DistanceAlongPath + delta);
+                group.DistanceAlongPath = _pathSystem.WrapDistance(group.DistanceAlongPath + delta);
 
                 for (int j = 0; j < group.Items.Count; j++)
                     group.Items[j].distanceAlongPath = group.DistanceAlongPath;
@@ -208,7 +240,7 @@ namespace ConveyorBelt
             {
                 ItemGroup group = _groups[groupIndex];
 
-                PathSample sample = pathSystem.GetPositionAtDistance(group.DistanceAlongPath);
+                PathSample sample = _pathSystem.GetPositionAtDistance(group.DistanceAlongPath);
                 Vector3 tangent = sample.Direction.sqrMagnitude > 0.0001f ? sample.Direction.normalized : Vector3.right;
                 Vector3 side = new Vector3(-tangent.y, tangent.x, 0f);
 
@@ -220,7 +252,12 @@ namespace ConveyorBelt
                         continue;
 
                     beltItem.item.position = sample.Position + _gridLayout.GetGridOffset(itemIndex, group.Items.Count, tangent, side);
-                    ApplyDirectionalRotation(beltItem.item, tangent);
+
+                    if (faceDirection)
+                    {
+                        float angle = Mathf.Atan2(tangent.y, tangent.x) * Mathf.Rad2Deg;
+                        beltItem.item.rotation = Quaternion.Euler(0f, 0f, angle);
+                    }
                 }
             }
         }
@@ -452,7 +489,7 @@ namespace ConveyorBelt
 
             items = new List<ConveyorBeltItem>(runtimeItems);
             _runtimeItemsGenerated = true;
-            pathDirty = true;
+            _pathDirty = true;
 
             // Rebuild groups with new items
             if (isActiveAndEnabled && Application.isPlaying)
@@ -465,7 +502,7 @@ namespace ConveyorBelt
 
         #region Item Generation
 
-        protected override void CacheSceneTemplates()
+        private void CacheSceneItemTemplates()
         {
             _sceneItemTemplates.Clear();
 
@@ -498,13 +535,13 @@ namespace ConveyorBelt
 
         private float GetDistanceFromLegacyFields(ConveyorBeltItem beltItem)
         {
-            if (pathSystem.PathLength <= 0.0001f || beltItem == null)
+            if (_pathSystem.PathLength <= 0.0001f || beltItem == null)
                 return 0f;
 
-            return pathSystem.WrapDistance(0f);
+            return _pathSystem.WrapDistance(0f);
         }
 
-        private void ApplyItemColor(ConveyorBeltItem beltItem)
+        private void ApplyColor(ConveyorBeltItem beltItem)
         {
             if (!applyItemColors || beltItem == null || beltItem.item == null)
                 return;

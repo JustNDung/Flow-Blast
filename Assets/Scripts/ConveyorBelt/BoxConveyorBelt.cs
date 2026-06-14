@@ -6,9 +6,8 @@ using UnityEngine;
 
 namespace ConveyorBelt
 {
-    public class BoxConveyorBelt : BeltBase
+    public class BoxConveyorBelt : MonoBehaviour
     {
-        // Preserved for backward compatibility with serialized scene data and Inspector references
         public enum ItemColorGroup
         {
             Red,
@@ -35,6 +34,12 @@ namespace ConveyorBelt
             public Transform BoxTransform => box;
         }
 
+        [Header("Path")]
+        [SerializeField] private LineRenderer lineRenderer;
+        [SerializeField] private float speed = 2f;
+        [SerializeField] private bool reverseDirection = true;
+        [SerializeField] private bool faceDirection = true;
+
         [Header("Boxes")]
         [SerializeField] private List<ConveyorBox> boxes = new List<ConveyorBox>();
         [SerializeField] private float boxSpacing = 2f;
@@ -46,9 +51,6 @@ namespace ConveyorBelt
         [SerializeField] private float fillPerItemRow = 0.05f;
         [SerializeField] private Vector2 storedBlockSpacing = new Vector2(0.08f, 0.08f);
         [SerializeField] private Vector3 storedBlockScale = new Vector3(0.12f, 0.12f, 1f);
-
-        [Header("Direction")]
-        [SerializeField] private bool reverseDirection = true;
 
         [Header("Panel")]
         [SerializeField] private bool autoCreateSelectionPanel = true;
@@ -62,11 +64,14 @@ namespace ConveyorBelt
             ItemColorGroup.Purple
         };
 
+        // Services
+        private PathSystem _pathSystem;
+
         private readonly List<Transform> _sceneBoxTemplates = new List<Transform>();
         private int _pendingBoxes;
+        private bool _pathDirty = true;
 
         // Backward-compatible color mapping
-        [Obsolete("Use ColorGroupExtensions.ToUnityColor() or ColorService instead.")]
         public static readonly Dictionary<ItemColorGroup, Color> GroupColors = new Dictionary<ItemColorGroup, Color>
         {
             { ItemColorGroup.Red, new Color(1f, 0.18f, 0.15f) },
@@ -81,7 +86,15 @@ namespace ConveyorBelt
 
         private void Awake()
         {
-            SetupBeltBase();
+            // Initialize services
+            _pathSystem = new PathSystem();
+            if (lineRenderer != null && lineRenderer.positionCount >= 2)
+                _pathSystem.RebuildPath(lineRenderer);
+
+            CacheSceneBoxTemplates();
+
+            if (_pathSystem.IsPathDirty)
+                _pathSystem.RebuildPath(lineRenderer);
 
             if (!startWithSceneBoxes)
                 ClearSceneBoxes();
@@ -95,18 +108,32 @@ namespace ConveyorBelt
                 ColorBoxSelectionPanel.Create(this, panelCenter, panelSpacing, panelColors);
         }
 
-        protected override void OnValidate()
+        private void OnValidate()
         {
-            base.OnValidate();
+            speed = Mathf.Max(0f, speed);
             boxSpacing = Mathf.Max(0.01f, boxSpacing);
             maxBoxesOnBelt = Mathf.Max(1, maxBoxesOnBelt);
             fillPerItemRow = Mathf.Clamp(fillPerItemRow, 0.01f, 1f);
             storedBlockSpacing.x = Mathf.Max(0.01f, storedBlockSpacing.x);
             storedBlockSpacing.y = Mathf.Max(0.01f, storedBlockSpacing.y);
+            _pathSystem?.MarkDirty();
+            _pathDirty = true;
         }
 
-        protected override void UpdateBelt()
+        private void Update()
         {
+            if (lineRenderer == null || lineRenderer.positionCount < 2)
+                return;
+
+            if (_pathDirty || _pathSystem.IsPathDirty)
+            {
+                _pathSystem.RebuildPath(lineRenderer);
+                _pathDirty = false;
+            }
+
+            if (_pathSystem.PathLength <= 0.0001f)
+                return;
+
             MoveBoxes();
         }
 
@@ -148,11 +175,11 @@ namespace ConveyorBelt
 
         public bool TryAddBoxFromPanel(Transform panelBox, ItemColorGroup colorGroup)
         {
-            if (panelBox == null || !CanAcceptMoreBoxes() || pathSystem.PathLength <= 0.0001f)
+            if (panelBox == null || !CanAcceptMoreBoxes() || _pathSystem.PathLength <= 0.0001f)
                 return false;
 
             _pendingBoxes++;
-            PathSample targetSample = pathSystem.GetPositionAtDistance(GetSpawnDistance());
+            PathSample targetSample = _pathSystem.GetPositionAtDistance(GetSpawnDistance());
 
             ConveyorBox conveyorBox = new ConveyorBox
             {
@@ -161,7 +188,7 @@ namespace ConveyorBelt
                 distanceAlongPath = GetSpawnDistance()
             };
 
-            ApplyBoxColor(conveyorBox);
+            ApplyColor(conveyorBox);
             panelBox.DOKill();
 
             // Remove existing components
@@ -243,9 +270,10 @@ namespace ConveyorBelt
             if (boxes == null || boxes.Count == 0)
                 return;
 
-            RebuildPathIfNeeded();
+            if (_pathDirty || _pathSystem.IsPathDirty)
+                _pathSystem.RebuildPath(lineRenderer);
 
-            if (pathSystem.PathLength <= 0.0001f)
+            if (_pathSystem.PathLength <= 0.0001f)
                 return;
 
             for (int i = 0; i < boxes.Count; i++)
@@ -255,8 +283,8 @@ namespace ConveyorBelt
                 if (box == null || box.box == null)
                     continue;
 
-                box.distanceAlongPath = pathSystem.WrapDistance(i * boxSpacing);
-                ApplyBoxColor(box);
+                box.distanceAlongPath = _pathSystem.WrapDistance(i * boxSpacing);
+                ApplyColor(box);
                 PlaceBox(box);
             }
         }
@@ -273,18 +301,22 @@ namespace ConveyorBelt
                 if (box == null || box.box == null || box.IsCompleting)
                     continue;
 
-                box.distanceAlongPath = pathSystem.WrapDistance(box.distanceAlongPath + delta);
+                box.distanceAlongPath = _pathSystem.WrapDistance(box.distanceAlongPath + delta);
                 PlaceBox(box);
             }
         }
 
         private void PlaceBox(ConveyorBox box)
         {
-            PathSample sample = pathSystem.GetPositionAtDistance(box.distanceAlongPath);
+            PathSample sample = _pathSystem.GetPositionAtDistance(box.distanceAlongPath);
             box.box.position = sample.Position;
 
-            Vector3 direction = reverseDirection ? -sample.Direction : sample.Direction;
-            ApplyDirectionalRotation(box.box, direction);
+            if (faceDirection && sample.Direction.sqrMagnitude > 0.0001f)
+            {
+                Vector3 direction = reverseDirection ? -sample.Direction : sample.Direction;
+                float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+                box.box.rotation = Quaternion.Euler(0f, 0f, angle);
+            }
         }
 
         /// <summary>
@@ -301,7 +333,7 @@ namespace ConveyorBelt
             }
 
             boxes = new List<ConveyorBox>(runtimeBoxes);
-            pathDirty = true;
+            _pathDirty = true;
 
             // Arrange the new boxes on the path
             if (isActiveAndEnabled && Application.isPlaying)
@@ -314,7 +346,7 @@ namespace ConveyorBelt
 
         #region Helpers
 
-        protected override void CacheSceneTemplates()
+        private void CacheSceneBoxTemplates()
         {
             _sceneBoxTemplates.Clear();
 
@@ -358,7 +390,7 @@ namespace ConveyorBelt
 
             ConveyorBox lastBox = boxes[boxes.Count - 1];
             float direction = reverseDirection ? 1f : -1f;
-            return pathSystem.WrapDistance(lastBox.distanceAlongPath + boxSpacing * direction);
+            return _pathSystem.WrapDistance(lastBox.distanceAlongPath + boxSpacing * direction);
         }
 
         private Vector3 GetStoredRowBlockLocalPosition(int row, int column, int columnCount)
@@ -389,7 +421,7 @@ namespace ConveyorBelt
             });
         }
 
-        private void ApplyBoxColor(ConveyorBox box)
+        private void ApplyColor(ConveyorBox box)
         {
             if (!applyBoxColors || box == null || box.box == null)
                 return;

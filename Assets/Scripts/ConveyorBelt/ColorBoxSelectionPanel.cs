@@ -1,4 +1,3 @@
-using Core;
 using ConveyorBelt.Services;
 using DG.Tweening;
 using UnityEngine;
@@ -11,7 +10,7 @@ namespace ConveyorBelt
 
         private BoxConveyorBelt _boxConveyorBelt;
         private Vector2 _buttonSpacing;
-        private ColorGroup[] _colors;
+        private BoxConveyorBelt.ItemColorGroup[] _colors;
 
         public static ColorBoxSelectionPanel Create(
             BoxConveyorBelt targetBelt,
@@ -25,22 +24,10 @@ namespace ConveyorBelt
             ColorBoxSelectionPanel panel = panelObject.AddComponent<ColorBoxSelectionPanel>();
             panel._boxConveyorBelt = targetBelt;
             panel._buttonSpacing = spacing;
-            // Convert from BoxConveyorBelt.ItemColorGroup[] to ColorGroup[]
-            panel._colors = ConvertColorArray(colorOptions);
+            panel._colors = colorOptions;
             panel.Build();
 
             return panel;
-        }
-
-        private static ColorGroup[] ConvertColorArray(BoxConveyorBelt.ItemColorGroup[] source)
-        {
-            if (source == null)
-                return null;
-
-            ColorGroup[] result = new ColorGroup[source.Length];
-            for (int i = 0; i < source.Length; i++)
-                result[i] = (ColorGroup)(int)source[i];
-            return result;
         }
 
         private void Build()
@@ -69,7 +56,7 @@ namespace ConveyorBelt
 
                 SpriteRenderer renderer = buttonObject.AddComponent<SpriteRenderer>();
                 renderer.sprite = GetSquareSprite();
-                _colors[i].ApplyTo(renderer);
+                ColorService.TryApplyColor(renderer, _colors[i]);
                 renderer.sortingOrder = 2;
 
                 BoxCollider2D collider = buttonObject.AddComponent<BoxCollider2D>();
@@ -110,11 +97,11 @@ namespace ConveyorBelt
     public class ColorBoxButton : MonoBehaviour
     {
         private BoxConveyorBelt _boxConveyorBelt;
-        private ColorGroup _colorGroup;
+        private BoxConveyorBelt.ItemColorGroup _colorGroup;
         private Collider2D _buttonCollider;
         private bool _isLaunching;
 
-        public void Initialize(BoxConveyorBelt targetBelt, ColorGroup color)
+        public void Initialize(BoxConveyorBelt targetBelt, BoxConveyorBelt.ItemColorGroup color)
         {
             _boxConveyorBelt = targetBelt;
             _colorGroup = color;
@@ -155,9 +142,7 @@ namespace ConveyorBelt
             launchedBox.localScale = transform.lossyScale;
             launchedBox.DOPunchScale(Vector3.one * 0.12f, 0.18f, 1, 0.5f);
 
-            // Convert ColorGroup back to BoxConveyorBelt.ItemColorGroup for API compatibility
-            var boxColorGroup = (BoxConveyorBelt.ItemColorGroup)(int)_colorGroup;
-            bool accepted = _boxConveyorBelt.TryAddBoxFromPanel(launchedBox, boxColorGroup);
+            bool accepted = _boxConveyorBelt.TryAddBoxFromPanel(launchedBox, _colorGroup);
 
             if (!accepted)
                 Destroy(launchedBox.gameObject);
