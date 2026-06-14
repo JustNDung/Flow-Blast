@@ -41,6 +41,9 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:VisualElement name="color-panel" class="color-panel">
+            <ui:VisualElement name="color-panel-inner" class="color-panel-inner" style="top: 31px;"/>
+        </ui:VisualElement>
         <ui:VisualElement name="settings-overlay" class="settings-overlay">
             <gameplay:SettingsPopupController name="settings-popup">
                 <ui:VisualElement name="popup-panel">

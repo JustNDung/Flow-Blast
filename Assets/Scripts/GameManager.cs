@@ -36,7 +36,6 @@ namespace Game
         [Header("References")]
         [SerializeField] private ConveyorBelt.ConveyorBelt _conveyorBelt;
         [SerializeField] private BoxConveyorBelt _boxConveyorBelt;
-        [SerializeField] private ColorBoxSelectionPanel _colorBoxPanel;
         [SerializeField] private LevelSpawner _levelSpawner;
 
         [Header("Level Configuration")]
@@ -204,6 +203,55 @@ namespace Game
             // Set initial UI state
             uiController.SetLevel(_currentLevelConfig.LevelNumber);
             uiController.AddCoins(_currentLevelConfig.InitialCoins);
+
+            // Initialize color selection panel with UI Toolkit
+            var availableColors = _currentLevelConfig.GetAvailableBoxColors();
+            if (_boxConveyorBelt != null && availableColors != null)
+            {
+                uiController.InitializeColorPanel(_boxConveyorBelt, availableColors);
+                // Prevent duplicate subscriptions on re-initialization
+                uiController.OnColorSelected -= OnColorButtonSelected;
+                uiController.OnColorSelected += OnColorButtonSelected;
+            }
+        }
+
+        private static Sprite _panelBoxSprite;
+
+        private void OnColorButtonSelected(Core.ColorGroup colorGroup)
+        {
+            if (_boxConveyorBelt == null)
+                return;
+
+            // Convert Core.ColorGroup to BoxConveyorBelt.ItemColorGroup
+            var boxColor = (BoxConveyorBelt.ItemColorGroup)(int)colorGroup;
+
+            // Create a temporary box GameObject (mimics what ColorBoxSelectionPanel did)
+            GameObject boxObject = new GameObject($"Panel Box {colorGroup}");
+            boxObject.transform.position = new Vector3(0f, -9.7f, 0f); // match old panelCenter
+
+            SpriteRenderer renderer = boxObject.AddComponent<SpriteRenderer>();
+            renderer.sprite = GetPanelBoxSprite();
+            colorGroup.ApplyTo(renderer);
+            renderer.sortingOrder = 2;
+
+            // Try to add it to the belt (TryAddBoxFromPanel checks capacity internally)
+            bool accepted = _boxConveyorBelt.TryAddBoxFromPanel(boxObject.transform, boxColor);
+
+            if (!accepted)
+                Destroy(boxObject);
+        }
+
+        private static Sprite GetPanelBoxSprite()
+        {
+            if (_panelBoxSprite != null)
+                return _panelBoxSprite;
+
+            Texture2D texture = new Texture2D(1, 1);
+            texture.SetPixel(0, 0, Color.white);
+            texture.Apply();
+            _panelBoxSprite = Sprite.Create(texture, new Rect(0f, 0f, 1f, 1f), new Vector2(0.5f, 0.5f), 1f);
+
+            return _panelBoxSprite;
         }
 
         /// <summary>

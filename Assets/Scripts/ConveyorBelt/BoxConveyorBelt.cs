@@ -102,12 +102,6 @@ namespace ConveyorBelt
             ArrangeBoxes();
         }
 
-        private void Start()
-        {
-            if (autoCreateSelectionPanel && FindFirstObjectByType<ColorBoxSelectionPanel>() == null)
-                ColorBoxSelectionPanel.Create(this, panelCenter, panelSpacing, panelColors);
-        }
-
         private void OnValidate()
         {
             speed = Mathf.Max(0f, speed);

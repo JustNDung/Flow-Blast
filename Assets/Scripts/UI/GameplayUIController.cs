@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Abilities;
+using ConveyorBelt;
+using Core;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -16,6 +18,11 @@ namespace UI
 
         private SettingsPopupController _settingsPopup;
 
+        // Color selection panel
+        private VisualElement _colorPanelInner;
+        private readonly Dictionary<ColorGroup, Button> _colorButtons = new();
+        private BoxConveyorBelt _boxConveyorBelt;
+
         // Ability UI elements - dynamically bound via data
         private readonly Dictionary<AbilityType, AbilityBinding> _abilityBindings = new();
 
@@ -27,6 +34,7 @@ namespace UI
 
         public event Action<AbilityType> OnAbilityUsed;
         public event Action OnBuyCoins;
+        public event Action<ColorGroup> OnColorSelected;
 
         public GameplayUIController()
         {
@@ -313,6 +321,73 @@ namespace UI
         {
             AbilityManager.Instance.AddCharges(type, count);
         }
+
+        #region Color Selection Panel
+
+        /// <summary>
+        /// Initialize the color selection panel with available colors.
+        /// Called by GameManager after BoxConveyorBelt is ready.
+        /// </summary>
+        public void InitializeColorPanel(BoxConveyorBelt boxConveyorBelt, IReadOnlyList<ColorGroup> availableColors)
+        {
+            _boxConveyorBelt = boxConveyorBelt;
+            _colorPanelInner = this.Q<VisualElement>("color-panel-inner");
+
+            if (_colorPanelInner == null)
+            {
+                Debug.LogWarning("[GameplayUI] color-panel-inner not found in UXML.");
+                return;
+            }
+
+            // Clear any existing buttons
+            _colorPanelInner.Clear();
+            _colorButtons.Clear();
+
+            if (availableColors == null || availableColors.Count == 0)
+            {
+                _colorPanelInner.style.display = DisplayStyle.None;
+                return;
+            }
+
+            _colorPanelInner.style.display = DisplayStyle.Flex;
+
+            foreach (var colorGroup in availableColors)
+            {
+                var button = new Button();
+                button.name = $"color-btn-{colorGroup}";
+                button.AddToClassList("color-button");
+                button.style.backgroundColor = colorGroup.ToUnityColor();
+                button.tooltip = colorGroup.ToString();
+
+                var colorGroupCaptured = colorGroup;
+                button.clicked += () => HandleColorButtonClicked(colorGroupCaptured);
+
+                _colorPanelInner.Add(button);
+                _colorButtons[colorGroup] = button;
+            }
+        }
+
+        /// <summary>
+        /// Update the visual state of color buttons (e.g., disable if belt is full).
+        /// </summary>
+        public void RefreshColorPanel()
+        {
+            bool canAdd = _boxConveyorBelt != null;
+            foreach (var kvp in _colorButtons)
+            {
+                kvp.Value.SetEnabled(canAdd);
+            }
+        }
+
+        private void HandleColorButtonClicked(ColorGroup colorGroup)
+        {
+            if (_boxConveyorBelt == null)
+                return;
+
+            OnColorSelected?.Invoke(colorGroup);
+        }
+
+        #endregion
 
         /// <summary>
         /// Internal binding data for a single ability in the UI.

@@ -5,22 +5,22 @@
     position: relative;
 }
 
-/* Header Panel */
+/* Header Panel - Mobile optimized */
 .header-panel {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 15px;
+    padding: 8px 12px;
     height: auto;
     flex-shrink: 0;
 }
 
 .header-button {
-    width: 45px;
-    height: 45px;
-    min-width: 45px;
-    min-height: 45px;
-    border-radius: 22.5px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 20px;
     background-color: rgb(72, 140, 200);
     border-width: 0;
     padding: 0;
@@ -39,8 +39,8 @@
 }
 
 .button-icon {
-    width: 25px;
-    height: 25px;
+    width: 22px;
+    height: 22px;
 }
 
 .settings-icon {
@@ -49,13 +49,13 @@
 }
 
 .level-label {
-    font-size: 28px;
+    font-size: 24px;
     -unity-font-style: bold;
     color: white;
     -unity-text-align: middle-center;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
     flex-grow: 1;
-    margin: 0 10px;
+    margin: 0 8px;
 }
 
 /* Coin Panel */
@@ -63,36 +63,36 @@
     flex-direction: row;
     align-items: center;
     background-color: rgb(255, 200, 50);
-    border-radius: 22.5px;
-    padding: 5px 10px;
-    height: 45px;
+    border-radius: 20px;
+    padding: 4px 8px;
+    height: 40px;
     flex-shrink: 0;
 }
 
 .coin-icon {
-    width: 25px;
-    height: 25px;
+    width: 22px;
+    height: 22px;
     background-image: url('project://database/Assets/UI/Icons/coin.png');
     -unity-background-scale-mode: scale-to-fit;
-    margin-right: 5px;
+    margin-right: 4px;
 }
 
 .coin-amount {
-    font-size: 20px;
+    font-size: 18px;
     -unity-font-style: bold;
     color: white;
-    margin-right: 5px;
-    min-width: 40px;
+    margin-right: 4px;
+    min-width: 36px;
     -unity-text-align: middle-center;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .add-coin-button {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    min-height: 28px;
-    border-radius: 14px;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+    border-radius: 12px;
     background-color: rgb(100, 200, 100);
     border-width: 0;
     padding: 0;
@@ -106,7 +106,7 @@
 }
 
 .plus-icon {
-    font-size: 20px;
+    font-size: 16px;
     -unity-font-style: bold;
     color: white;
     margin: 0;
@@ -114,21 +114,21 @@
     -unity-text-align: middle-center;
 }
 
-/* Ability Panel */
+/* Ability Panel - Mobile optimized */
 .ability-panel {
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    padding: 15px;
+    padding: 10px;
     position: absolute;
-    bottom: 20px;
+    bottom: 12px;
     left: 0;
     right: 0;
     height: auto;
 }
 
 .ability-container {
-    margin: 0 10px;
+    margin: 0 6px;
     position: relative;
     justify-content: center;
     align-items: center;
@@ -136,13 +136,13 @@
 }
 
 .ability-button {
-    width: 70px;
-    height: 70px;
-    min-width: 70px;
-    min-height: 70px;
-    border-radius: 18px;
+    width: 60px;
+    height: 60px;
+    min-width: 60px;
+    min-height: 60px;
+    border-radius: 16px;
     background-color: rgb(72, 140, 200);
-    border-width: 3px;
+    border-width: 2px;
     border-color: white;
     padding: 0;
     margin: 0;
@@ -159,8 +159,8 @@
 }
 
 .ability-icon {
-    width: 45px;
-    height: 45px;
+    width: 38px;
+    height: 38px;
     -unity-background-scale-mode: scale-to-fit;
 }
 
@@ -178,25 +178,78 @@
 
 .ability-badge {
     position: absolute;
-    top: -8px;
-    right: -8px;
-    width: 26px;
-    height: 26px;
-    min-width: 26px;
-    min-height: 26px;
-    border-radius: 13px;
+    top: -6px;
+    right: -6px;
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
+    border-radius: 11px;
     background-color: rgb(220, 50, 50);
-    border-width: 2px;
+    border-width: 1.5px;
     border-color: white;
     justify-content: center;
     align-items: center;
 }
 
 .ability-count {
-    font-size: 14px;
+    font-size: 11px;
     -unity-font-style: bold;
     color: white;
     -unity-text-align: middle-center;
+}
+
+/* Color Panel - Mobile optimized */
+.color-panel {
+    position: absolute;
+    bottom: 155px;
+    left: 0;
+    right: 0;
+    justify-content: center;
+    align-items: center;
+    height: auto;
+    flex-shrink: 0;
+    pointer-events: auto;
+}
+
+.color-panel-inner {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(40, 50, 140, 0.9);
+    border-radius: 10px;
+    padding: 6px 10px;
+    flex-shrink: 1;
+    flex-wrap: wrap;
+}
+
+.color-button {
+    width: 44px;
+    height: 32px;
+    min-width: 36px;
+    min-height: 28px;
+    border-radius: 6px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.6);
+    padding: 0;
+    margin: 3px;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent;
+    transition: scale 0.1s, border-color 0.1s;
+}
+
+.color-button:hover {
+    border-color: white;
+}
+
+.color-button:active {
+    scale: 0.85;
+    border-color: white;
+}
+
+.color-button:disabled {
+    opacity: 0.4;
 }
 
 /* Settings Overlay */
