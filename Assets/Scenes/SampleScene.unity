@@ -1340,11 +1340,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: acb0f098070c41443a6c5b143c558a1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Core.LevelSpawner
-  _itemPrefab: {fileID: 0}
-  _boxPrefab: {fileID: 0}
-  _panelBoxPrefab: {fileID: 0}
-  _itemParent: {fileID: 0}
-  _boxParent: {fileID: 0}
+  _redItemPrefab: {fileID: 3906002311804442437, guid: 92fb0073439be0847855239ea6726ef9, type: 3}
+  _yellowItemPrefab: {fileID: 3906002311804442437, guid: e844f9d7f6b1a2c43a0647f10258f3db, type: 3}
+  _blueItemPrefab: {fileID: 3906002311804442437, guid: b981b34676cf81641939b09226064381, type: 3}
+  _greenItemPrefab: {fileID: 3906002311804442437, guid: ee8d2df2709dc404eb16e3d253ee11b9, type: 3}
+  _purpleItemPrefab: {fileID: 3906002311804442437, guid: 1a472a00aba5f854b9000618c4f1cbdc, type: 3}
+  _orangeItemPrefab: {fileID: 3906002311804442437, guid: 543ec015e9923174098ef6c6faa6aa13, type: 3}
+  _pinkItemPrefab: {fileID: 3906002311804442437, guid: 3f2ce7d4799f9e54fa0665368ce5f03f, type: 3}
+  _cyanItemPrefab: {fileID: 3906002311804442437, guid: 9b6f4838d7259bf458197a6f979c9fbd, type: 3}
+  _redBoxPrefab: {fileID: 3906002311804442437, guid: 92fb0073439be0847855239ea6726ef9, type: 3}
+  _yellowBoxPrefab: {fileID: 3906002311804442437, guid: e844f9d7f6b1a2c43a0647f10258f3db, type: 3}
+  _blueBoxPrefab: {fileID: 3906002311804442437, guid: b981b34676cf81641939b09226064381, type: 3}
+  _greenBoxPrefab: {fileID: 3906002311804442437, guid: ee8d2df2709dc404eb16e3d253ee11b9, type: 3}
+  _purpleBoxPrefab: {fileID: 3906002311804442437, guid: 1a472a00aba5f854b9000618c4f1cbdc, type: 3}
+  _orangeBoxPrefab: {fileID: 3906002311804442437, guid: 543ec015e9923174098ef6c6faa6aa13, type: 3}
+  _pinkBoxPrefab: {fileID: 3906002311804442437, guid: 3f2ce7d4799f9e54fa0665368ce5f03f, type: 3}
+  _cyanBoxPrefab: {fileID: 3906002311804442437, guid: 9b6f4838d7259bf458197a6f979c9fbd, type: 3}
+  _prewarmCountPerColor: 10
+  _itemParent: {fileID: 420512270}
+  _boxParent: {fileID: 200001003}
 --- !u!4 &344412603
 Transform:
   m_ObjectHideFlags: 0
@@ -1887,7 +1901,7 @@ MonoBehaviour:
   _conveyorBelt: {fileID: 420512268}
   _boxConveyorBelt: {fileID: 200001001}
   _colorBoxPanel: {fileID: 0}
-  _levelSpawner: {fileID: 0}
+  _levelSpawner: {fileID: 344412602}
   _currentLevelConfig: {fileID: 11400000, guid: 758481a58bc335448bd1663b2059713e, type: 2}
   _abilityDefinitions:
   - {fileID: 11400000, guid: 544670358a23dca4faafc79c5f85e659, type: 2}
@@ -2229,6 +2243,50 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1533751510
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1533751512}
+  - component: {fileID: 1533751511}
+  m_Layer: 0
+  m_Name: ObjectPool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1533751511
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1533751510}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d5bb8c440f53b9489dda6620e5010d3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Core.ObjectPool
+--- !u!4 &1533751512
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1533751510}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1756110367
 GameObject:
   m_ObjectHideFlags: 0
@@ -2509,6 +2567,7 @@ SceneRoots:
   - {fileID: 519769968}
   - {fileID: 1893925513}
   - {fileID: 2117541375}
+  - {fileID: 1533751512}
   - {fileID: 614896207}
   - {fileID: 420512270}
   - {fileID: 200001003}
