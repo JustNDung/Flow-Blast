@@ -41,7 +41,7 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="settings-overlay" style="display: none; position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); align-items: center; justify-content: center;">
+        <ui:VisualElement name="settings-overlay" class="settings-overlay">
             <gameplay:SettingsPopupController name="settings-popup">
                 <ui:VisualElement name="popup-panel">
                     <ui:VisualElement name="header">

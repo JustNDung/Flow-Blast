@@ -1,120 +1,86 @@
 #settings-popup
 {
-    position: absolute;
-
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-
+    width: 100%;
+    height: 100%;
     align-items: center;
     justify-content: center;
-
-    background-color: rgba(0,0,0,0.55);
 }
 
 #popup-panel
 {
-    width: 520px;
-    min-height: 760px;
+    width: 85%;
+    max-width: 450px;
+    min-height: auto;
 
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-top: 20px;
-    padding-bottom: 30px;
+    padding: 15px;
 
     background-color: #4285F4;
 
-    border-top-left-radius: 36px;
-    border-top-right-radius: 36px;
-    border-bottom-left-radius: 36px;
-    border-bottom-right-radius: 36px;
+    border-radius: 28px;
 
-    border-left-width: 10px;
-    border-right-width: 10px;
-    border-top-width: 10px;
-    border-bottom-width: 10px;
-
-    border-left-color: #F5F5F5;
-    border-right-color: #F5F5F5;
-    border-top-color: #F5F5F5;
-    border-bottom-color: #F5F5F5;
+    border-width: 8px;
+    border-color: #F5F5F5;
 }
 
 #header
 {
-    height: 120px;
-
+    height: 80px;
     flex-direction: row;
-
     justify-content: center;
     align-items: center;
+    margin-bottom: 10px;
 }
 
 #title-label
 {
     flex-grow: 1;
-
-    unity-font-style: bold;
-
-    font-size: 42px;
-
+    -unity-font-style: bold;
+    font-size: 32px;
     color: white;
-
-    -unity-text-outline-width: 4px;
+    -unity-text-outline-width: 3px;
     -unity-text-outline-color: #2A4E95;
-
-    text-align: middle-center;
+    -unity-text-align: middle-center;
 }
 
 #close-button
 {
-    width: 80px;
-    height: 80px;
-
+    width: 60px;
+    height: 60px;
+    min-width: 60px;
+    min-height: 60px;
     background-color: #4F8EFF;
-
-    border-radius: 20px;
-
+    border-radius: 16px;
+    border-width: 0;
     color: white;
-
-    font-size: 30px;
-
-    unity-font-style: bold;
+    font-size: 26px;
+    -unity-font-style: bold;
 }
 
 #audio-panel
 {
-    height: 150px;
-
-    margin-bottom: 25px;
-
+    height: 100px;
+    margin-bottom: 15px;
     flex-direction: row;
-
     justify-content: space-evenly;
     align-items: center;
-
     background-color: rgba(255,255,255,0.08);
-
-    border-radius: 28px;
+    border-radius: 20px;
 }
 
 #sound-button,
 #music-button,
 #vibrate-button
 {
-    width: 110px;
-    height: 110px;
-
+    width: 80px;
+    height: 80px;
+    min-width: 80px;
+    min-height: 80px;
     background-color: #78D400;
-
-    border-radius: 24px;
-
+    border-radius: 18px;
+    border-width: 0;
     color: white;
-
-    font-size: 42px;
-
-    unity-font-style: bold;
+    font-size: 36px;
+    -unity-font-style: bold;
 }
 
 .toggle-off
@@ -124,67 +90,47 @@
 
 #retry-button
 {
-    height: 105px;
-
-    margin-bottom: 18px;
-
+    height: 70px;
+    margin-bottom: 12px;
     background-color: #FFD32B;
-
-    border-radius: 28px;
-
+    border-radius: 20px;
+    border-width: 0;
     color: white;
-
-    font-size: 32px;
-
-    unity-font-style: bold;
-
-    -unity-text-outline-width: 3px;
+    font-size: 26px;
+    -unity-font-style: bold;
+    -unity-text-outline-width: 2px;
     -unity-text-outline-color: #8A5A00;
 }
 
 #restore-button,
 #rate-button
 {
-    height: 100px;
-
-    margin-bottom: 18px;
-
+    height: 65px;
+    margin-bottom: 12px;
     background-color: #31C7FF;
-
-    border-radius: 28px;
-
+    border-radius: 20px;
+    border-width: 0;
     color: white;
-
-    font-size: 30px;
-
-    unity-font-style: bold;
-
-    -unity-text-outline-width: 3px;
+    font-size: 24px;
+    -unity-font-style: bold;
+    -unity-text-outline-width: 2px;
     -unity-text-outline-color: #165D8C;
 }
 
 #terms-label
 {
-    margin-top: 12px;
-
-    font-size: 20px;
-
+    margin-top: 8px;
+    font-size: 16px;
     color: #244EA7;
-
-    unity-font-style: bold;
-
-    text-align: middle-center;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
 }
 
 #version-label
 {
-    margin-top: 8px;
-
-    font-size: 24px;
-
+    margin-top: 5px;
+    font-size: 18px;
     color: #244EA7;
-
-    unity-font-style: bold;
-
-    text-align: middle-center;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
 }

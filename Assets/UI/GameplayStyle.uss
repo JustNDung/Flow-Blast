@@ -2,6 +2,7 @@
     width: 100%;
     height: 100%;
     flex-direction: column;
+    position: relative;
 }
 
 /* Header Panel */
@@ -9,29 +10,28 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: 20px;
-    height: 80px;
+    padding: 10px 15px;
+    height: auto;
+    flex-shrink: 0;
 }
 
 .header-button {
-    width: 50px;
-    height: 50px;
-    border-radius: 25px;
+    width: 45px;
+    height: 45px;
+    min-width: 45px;
+    min-height: 45px;
+    border-radius: 22.5px;
     background-color: rgb(72, 140, 200);
     border-width: 0;
     padding: 0;
     margin: 0;
     justify-content: center;
     align-items: center;
-    transition-duration: 0.2s;
-}
-
-.header-button:hover {
-    scale: 1.1;
+    flex-shrink: 0;
 }
 
 .header-button:active {
-    scale: 0.95;
+    scale: 0.9;
 }
 
 .settings-button {
@@ -39,8 +39,8 @@
 }
 
 .button-icon {
-    width: 30px;
-    height: 30px;
+    width: 25px;
+    height: 25px;
 }
 
 .settings-icon {
@@ -49,11 +49,13 @@
 }
 
 .level-label {
-    font-size: 32px;
+    font-size: 28px;
     -unity-font-style: bold;
     color: white;
     -unity-text-align: middle-center;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    flex-grow: 1;
+    margin: 0 10px;
 }
 
 /* Coin Panel */
@@ -61,33 +63,36 @@
     flex-direction: row;
     align-items: center;
     background-color: rgb(255, 200, 50);
-    border-radius: 25px;
-    padding: 8px 12px;
-    height: 50px;
+    border-radius: 22.5px;
+    padding: 5px 10px;
+    height: 45px;
+    flex-shrink: 0;
 }
 
 .coin-icon {
-    width: 30px;
-    height: 30px;
+    width: 25px;
+    height: 25px;
     background-image: url('project://database/Assets/UI/Icons/coin.png');
     -unity-background-scale-mode: scale-to-fit;
-    margin-right: 8px;
+    margin-right: 5px;
 }
 
 .coin-amount {
-    font-size: 24px;
+    font-size: 20px;
     -unity-font-style: bold;
     color: white;
-    margin-right: 8px;
-    min-width: 50px;
+    margin-right: 5px;
+    min-width: 40px;
     -unity-text-align: middle-center;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .add-coin-button {
-    width: 30px;
-    height: 30px;
-    border-radius: 15px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    border-radius: 14px;
     background-color: rgb(100, 200, 100);
     border-width: 0;
     padding: 0;
@@ -96,16 +101,12 @@
     align-items: center;
 }
 
-.add-coin-button:hover {
-    background-color: rgb(120, 220, 120);
-}
-
 .add-coin-button:active {
     scale: 0.9;
 }
 
 .plus-icon {
-    font-size: 24px;
+    font-size: 20px;
     -unity-font-style: bold;
     color: white;
     margin: 0;
@@ -117,26 +118,29 @@
 .ability-panel {
     flex-direction: row;
     justify-content: center;
-    align-items: flex-end;
-    padding: 20px;
+    align-items: center;
+    padding: 15px;
     position: absolute;
-    bottom: 0;
+    bottom: 20px;
     left: 0;
     right: 0;
-    height: 150px;
+    height: auto;
 }
 
 .ability-container {
-    margin: 0 15px;
+    margin: 0 10px;
     position: relative;
     justify-content: center;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .ability-button {
-    width: 80px;
-    height: 80px;
-    border-radius: 20px;
+    width: 70px;
+    height: 70px;
+    min-width: 70px;
+    min-height: 70px;
+    border-radius: 18px;
     background-color: rgb(72, 140, 200);
     border-width: 3px;
     border-color: white;
@@ -144,15 +148,10 @@
     margin: 0;
     justify-content: center;
     align-items: center;
-    transition-duration: 0.2s;
-}
-
-.ability-button:hover {
-    scale: 1.1;
 }
 
 .ability-button:active {
-    scale: 0.95;
+    scale: 0.9;
 }
 
 .ability-button:disabled {
@@ -160,8 +159,8 @@
 }
 
 .ability-icon {
-    width: 50px;
-    height: 50px;
+    width: 45px;
+    height: 45px;
     -unity-background-scale-mode: scale-to-fit;
 }
 
@@ -179,11 +178,13 @@
 
 .ability-badge {
     position: absolute;
-    top: -10px;
-    right: -10px;
-    width: 30px;
-    height: 30px;
-    border-radius: 15px;
+    top: -8px;
+    right: -8px;
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    min-height: 26px;
+    border-radius: 13px;
     background-color: rgb(220, 50, 50);
     border-width: 2px;
     border-color: white;
@@ -192,8 +193,21 @@
 }
 
 .ability-count {
-    font-size: 16px;
+    font-size: 14px;
     -unity-font-style: bold;
     color: white;
     -unity-text-align: middle-center;
+}
+
+/* Settings Overlay */
+.settings-overlay {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    align-items: center;
+    justify-content: center;
 }
