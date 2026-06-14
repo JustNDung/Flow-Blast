@@ -1808,6 +1808,58 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &519769966
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 519769968}
+  - component: {fileID: 519769967}
+  m_Layer: 0
+  m_Name: GameManager (Level 1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &519769967
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519769966}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b01f9498d3c03984eb61b3917f5ff525, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.GameManager
+  _conveyorBelt: {fileID: 420512268}
+  _boxConveyorBelt: {fileID: 200001001}
+  _colorBoxPanel: {fileID: 0}
+  _currentLevelConfig: {fileID: 11400000, guid: 758481a58bc335448bd1663b2059713e, type: 2}
+  _abilityDefinitions:
+  - {fileID: 11400000, guid: 544670358a23dca4faafc79c5f85e659, type: 2}
+  - {fileID: 11400000, guid: bf7fab2f904f33040a32aea7caa151ff, type: 2}
+  - {fileID: 11400000, guid: 4dacc22fe6a8ab541bb5e07690608f41, type: 2}
+--- !u!4 &519769968
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519769966}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.70592, y: -2.57577, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &614896205
 GameObject:
   m_ObjectHideFlags: 0
@@ -2405,6 +2457,7 @@ SceneRoots:
   m_Roots:
   - {fileID: 519420032}
   - {fileID: 619394802}
+  - {fileID: 519769968}
   - {fileID: 1893925513}
   - {fileID: 2117541375}
   - {fileID: 614896207}

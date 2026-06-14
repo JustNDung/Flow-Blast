@@ -25,7 +25,6 @@ namespace Abilities
                     {
                         var go = new GameObject("AbilityManager");
                         _instance = go.AddComponent<AbilityManager>();
-                        DontDestroyOnLoad(go);
                     }
                 }
                 return _instance;
@@ -56,7 +55,6 @@ namespace Abilities
             }
 
             _instance = this;
-            DontDestroyOnLoad(gameObject);
         }
 
         private void OnDestroy()

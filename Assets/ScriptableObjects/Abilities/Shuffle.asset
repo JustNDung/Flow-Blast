@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16fcc1558752af448bbfe1aabb692744, type: 3}
   m_Name: Shuffle
   m_EditorClassIdentifier: Assembly-CSharp::Abilities.AbilityDefinition
-  _abilityName: 
-  _description: 
+  _abilityName: Shuffle
+  _description: Randomizes the positions of all items on the conveyor belt
   _abilityType: 2
   _defaultCount: 1
   _icon: {fileID: 0}
-  _uiContainerName: 
-  _uiButtonName: 
-  _uiCountLabelName: 
+  _uiContainerName: shuffle-container
+  _uiButtonName: shuffle-button
+  _uiCountLabelName: shuffle-count

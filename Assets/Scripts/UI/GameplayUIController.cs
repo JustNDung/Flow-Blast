@@ -39,10 +39,7 @@ namespace UI
             InitializeUI();
             RegisterEvents();
             SubscribeToMessages();
-            BindToAbilityManager();
-            UpdateUI();
             HideSettingsPopup();
-            _isInitialized = true;
         }
 
         private void OnDetached(DetachFromPanelEvent evt)
@@ -61,9 +58,40 @@ namespace UI
             _addCoinButton = this.Q<Button>("add-coin-button");
             _settingsPopup = this.Q<SettingsPopupController>("settings-popup");
 
-            // Build ability bindings dynamically from all registered ability definitions
+            // Do NOT call RebindAbilities() here. OnAttached fires during UIDocument.OnEnable
+            // (Awake phase), which is before GameManager.Start. The AbilityManager singleton may
+            // not exist yet, or may not be initialized. GameManager.InitializeLevel() calls
+            // RebindAbilities() after initializing the AbilityManager.
+        }
+
+        /// <summary>
+        /// Initialize runtime state that depends on AbilityManager being ready.
+        /// Called by GameManager after AbilityManager is initialized.
+        /// </summary>
+        public void InitializeRuntime()
+        {
+            RebindAbilities();
+            RegisterAbilityButtons();
+            BindToAbilityManager();
+            UpdateUI();
+            _isInitialized = true;
+        }
+
+        /// <summary>
+        /// Rebuild ability bindings from the current AbilityManager state.
+        /// Safe to call multiple times (e.g., after AbilityManager.Initialize()).
+        /// </summary>
+        public void RebindAbilities()
+        {
             _abilityBindings.Clear();
+
             var definitions = AbilityManager.Instance.GetAllDefinitions();
+            if (definitions == null || definitions.Count == 0)
+            {
+                // AbilityManager not initialized yet - skip silently
+                return;
+            }
+
             foreach (var definition in definitions)
             {
                 var container = this.Q<VisualElement>(definition.UIContainerName);
@@ -98,17 +126,6 @@ namespace UI
                 _settingsPopup.OnRestore += HandleRestore;
                 _settingsPopup.OnRate += HandleRate;
             }
-
-            // Register ability button clicks from bindings
-            foreach (var kvp in _abilityBindings)
-            {
-                var binding = kvp.Value;
-                if (binding.Button != null)
-                {
-                    var abilityType = kvp.Key; // capture for closure
-                    binding.Button.clicked += () => UseAbility(abilityType);
-                }
-            }
         }
 
         private void UnregisterEvents()
@@ -126,13 +143,29 @@ namespace UI
                 _settingsPopup.OnRestore -= HandleRestore;
                 _settingsPopup.OnRate -= HandleRate;
             }
+        }
 
+        private void RegisterAbilityButtons()
+        {
             foreach (var kvp in _abilityBindings)
             {
                 var binding = kvp.Value;
                 if (binding.Button != null)
                 {
-                    var abilityType = kvp.Key; // capture for closure
+                    var abilityType = kvp.Key;
+                    binding.Button.clicked += () => UseAbility(abilityType);
+                }
+            }
+        }
+
+        private void UnregisterAbilityButtons()
+        {
+            foreach (var kvp in _abilityBindings)
+            {
+                var binding = kvp.Value;
+                if (binding.Button != null)
+                {
+                    var abilityType = kvp.Key;
                     binding.Button.clicked -= () => UseAbility(abilityType);
                 }
             }

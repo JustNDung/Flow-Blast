@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16fcc1558752af448bbfe1aabb692744, type: 3}
   m_Name: Magnet
   m_EditorClassIdentifier: Assembly-CSharp::Abilities.AbilityDefinition
-  _abilityName: 
-  _description: 
+  _abilityName: Magnet
+  _description: Attracts all items on the conveyor belt toward the collection point
   _abilityType: 0
   _defaultCount: 1
   _icon: {fileID: 0}
-  _uiContainerName: 
-  _uiButtonName: 
-  _uiCountLabelName: 
+  _uiContainerName: magnet-container
+  _uiButtonName: magnet-button
+  _uiCountLabelName: magnet-count

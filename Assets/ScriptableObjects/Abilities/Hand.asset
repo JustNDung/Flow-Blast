@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16fcc1558752af448bbfe1aabb692744, type: 3}
   m_Name: Hand
   m_EditorClassIdentifier: Assembly-CSharp::Abilities.AbilityDefinition
-  _abilityName: 
-  _description: 
+  _abilityName: Hand
+  _description: Removes a selected item from the conveyor belt
   _abilityType: 1
   _defaultCount: 1
   _icon: {fileID: 0}
-  _uiContainerName: 
-  _uiButtonName: 
-  _uiCountLabelName: 
+  _uiContainerName: hand-container
+  _uiButtonName: hand-button
+  _uiCountLabelName: hand-count
