@@ -34,21 +34,23 @@ namespace UI
         private void OnAttached(AttachToPanelEvent evt)
         {
             _closeButton = this.Q<Button>("close-button");
-
             _soundButton = this.Q<Button>("sound-button");
             _musicButton = this.Q<Button>("music-button");
             _vibrateButton = this.Q<Button>("vibrate-button");
-
             _retryButton = this.Q<Button>("retry-button");
             _restoreButton = this.Q<Button>("restore-button");
             _rateButton = this.Q<Button>("rate-button");
-
             _versionLabel = this.Q<Label>("version-label");
 
-            RegisterEvents();
-            SubscribeToMessages();
-
-            RefreshStates();
+            // Only register events and subscribe if all elements are found
+            if (_closeButton != null && _soundButton != null && _musicButton != null &&
+                _vibrateButton != null && _retryButton != null && _restoreButton != null &&
+                _rateButton != null && _versionLabel != null)
+            {
+                RegisterEvents();
+                SubscribeToMessages();
+                RefreshStates();
+            }
         }
 
         private void OnDetached(DetachFromPanelEvent evt)
@@ -129,6 +131,9 @@ namespace UI
 
         private void RefreshStates()
         {
+            if (_soundButton == null || _musicButton == null || _vibrateButton == null)
+                return;
+
             SetToggleClass(_soundButton, AudioManager.Instance.SoundEnabled);
             SetToggleClass(_musicButton, AudioManager.Instance.MusicEnabled);
             SetToggleClass(_vibrateButton, AudioManager.Instance.VibrateEnabled);
@@ -136,12 +141,18 @@ namespace UI
 
         private void SetToggleClass(Button button, bool state)
         {
-            button.EnableInClassList("toggle-off", !state);
+            if (button != null)
+            {
+                button.EnableInClassList("toggle-off", !state);
+            }
         }
 
         public void SetVersion(string version)
         {
-            _versionLabel.text = version;
+            if (_versionLabel != null)
+            {
+                _versionLabel.text = version;
+            }
         }
     }
 }

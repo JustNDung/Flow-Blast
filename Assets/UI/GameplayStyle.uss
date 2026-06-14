@@ -1,0 +1,199 @@
+.gameplay-root {
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+}
+
+/* Header Panel */
+.header-panel {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    height: 80px;
+}
+
+.header-button {
+    width: 50px;
+    height: 50px;
+    border-radius: 25px;
+    background-color: rgb(72, 140, 200);
+    border-width: 0;
+    padding: 0;
+    margin: 0;
+    justify-content: center;
+    align-items: center;
+    transition-duration: 0.2s;
+}
+
+.header-button:hover {
+    scale: 1.1;
+}
+
+.header-button:active {
+    scale: 0.95;
+}
+
+.settings-button {
+    background-color: rgb(72, 140, 200);
+}
+
+.button-icon {
+    width: 30px;
+    height: 30px;
+}
+
+.settings-icon {
+    background-image: url('project://database/Assets/UI/Icons/settings.png');
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.level-label {
+    font-size: 32px;
+    -unity-font-style: bold;
+    color: white;
+    -unity-text-align: middle-center;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Coin Panel */
+.coin-panel {
+    flex-direction: row;
+    align-items: center;
+    background-color: rgb(255, 200, 50);
+    border-radius: 25px;
+    padding: 8px 12px;
+    height: 50px;
+}
+
+.coin-icon {
+    width: 30px;
+    height: 30px;
+    background-image: url('project://database/Assets/UI/Icons/coin.png');
+    -unity-background-scale-mode: scale-to-fit;
+    margin-right: 8px;
+}
+
+.coin-amount {
+    font-size: 24px;
+    -unity-font-style: bold;
+    color: white;
+    margin-right: 8px;
+    min-width: 50px;
+    -unity-text-align: middle-center;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.add-coin-button {
+    width: 30px;
+    height: 30px;
+    border-radius: 15px;
+    background-color: rgb(100, 200, 100);
+    border-width: 0;
+    padding: 0;
+    margin: 0;
+    justify-content: center;
+    align-items: center;
+}
+
+.add-coin-button:hover {
+    background-color: rgb(120, 220, 120);
+}
+
+.add-coin-button:active {
+    scale: 0.9;
+}
+
+.plus-icon {
+    font-size: 24px;
+    -unity-font-style: bold;
+    color: white;
+    margin: 0;
+    padding: 0;
+    -unity-text-align: middle-center;
+}
+
+/* Ability Panel */
+.ability-panel {
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 20px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 150px;
+}
+
+.ability-container {
+    margin: 0 15px;
+    position: relative;
+    justify-content: center;
+    align-items: center;
+}
+
+.ability-button {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    background-color: rgb(72, 140, 200);
+    border-width: 3px;
+    border-color: white;
+    padding: 0;
+    margin: 0;
+    justify-content: center;
+    align-items: center;
+    transition-duration: 0.2s;
+}
+
+.ability-button:hover {
+    scale: 1.1;
+}
+
+.ability-button:active {
+    scale: 0.95;
+}
+
+.ability-button:disabled {
+    opacity: 0.5;
+}
+
+.ability-icon {
+    width: 50px;
+    height: 50px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.magnet-icon {
+    background-image: url('project://database/Assets/UI/Icons/magnet.png');
+}
+
+.hand-icon {
+    background-image: url('project://database/Assets/UI/Icons/hand.png');
+}
+
+.shuffle-icon {
+    background-image: url('project://database/Assets/UI/Icons/shuffle.png');
+}
+
+.ability-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 15px;
+    background-color: rgb(220, 50, 50);
+    border-width: 2px;
+    border-color: white;
+    justify-content: center;
+    align-items: center;
+}
+
+.ability-count {
+    font-size: 16px;
+    -unity-font-style: bold;
+    color: white;
+    -unity-text-align: middle-center;
+}

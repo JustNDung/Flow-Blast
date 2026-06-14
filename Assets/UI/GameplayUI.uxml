@@ -1,0 +1,65 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xmlns:gameplay="UI" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/GameplayStyle.uss?fileID=7433441132597879392&amp;guid=5b3dbb6d879d3c048944c54c848327f1&amp;type=3#GameplayStyle"/>
+    <Style src="project://database/Assets/UI/SettingsPopupStyle.uss?fileID=7433441132597879392&amp;guid=8f26639776a0b60419ecd8a956eac5fe&amp;type=3#SettingsPopupStyle"/>
+    <gameplay:GameplayUIController name="gameplay-controller" class="gameplay-root">
+        <ui:VisualElement name="header-panel" class="header-panel">
+            <ui:Button name="settings-button" class="header-button settings-button">
+                <ui:VisualElement class="button-icon settings-icon"/>
+            </ui:Button>
+            <ui:Label name="level-label" text="LEVEL 23" class="level-label"/>
+            <ui:VisualElement name="coin-panel" class="coin-panel">
+                <ui:VisualElement class="coin-icon"/>
+                <ui:Label name="coin-amount" text="300" class="coin-amount"/>
+                <ui:Button name="add-coin-button" class="add-coin-button">
+                    <ui:Label text="+" class="plus-icon"/>
+                </ui:Button>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="ability-panel" class="ability-panel">
+            <ui:VisualElement name="magnet-container" class="ability-container">
+                <ui:Button name="magnet-button" class="ability-button">
+                    <ui:VisualElement class="ability-icon magnet-icon"/>
+                </ui:Button>
+                <ui:VisualElement name="magnet-badge" class="ability-badge">
+                    <ui:Label name="magnet-count" text="1" class="ability-count"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="hand-container" class="ability-container">
+                <ui:Button name="hand-button" class="ability-button">
+                    <ui:VisualElement class="ability-icon hand-icon"/>
+                </ui:Button>
+                <ui:VisualElement name="hand-badge" class="ability-badge">
+                    <ui:Label name="hand-count" text="1" class="ability-count"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="shuffle-container" class="ability-container">
+                <ui:Button name="shuffle-button" class="ability-button">
+                    <ui:VisualElement class="ability-icon shuffle-icon"/>
+                </ui:Button>
+                <ui:VisualElement name="shuffle-badge" class="ability-badge">
+                    <ui:Label name="shuffle-count" text="1" class="ability-count"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="settings-overlay" style="display: none; position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); align-items: center; justify-content: center;">
+            <gameplay:SettingsPopupController name="settings-popup">
+                <ui:VisualElement name="popup-panel">
+                    <ui:VisualElement name="header">
+                        <ui:Label name="title-label" text="Settings"/>
+                        <ui:Button name="close-button" text="✕"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="audio-panel">
+                        <ui:Button name="sound-button" text="🔊"/>
+                        <ui:Button name="music-button" text="♫"/>
+                        <ui:Button name="vibrate-button" text="📳"/>
+                    </ui:VisualElement>
+                    <ui:Button name="retry-button" text="Retry"/>
+                    <ui:Button name="restore-button" text="Restore"/>
+                    <ui:Button name="rate-button" text="Rate"/>
+                    <ui:Label name="terms-label" text="Term &amp; Privacy"/>
+                    <ui:Label name="version-label" text="v0.0.8"/>
+                </ui:VisualElement>
+            </gameplay:SettingsPopupController>
+        </ui:VisualElement>
+    </gameplay:GameplayUIController>
+</ui:UXML>
