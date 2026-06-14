@@ -351,6 +351,13 @@ namespace ConveyorBelt
                     rowStartPositions.Clear();
                     rowStartScales.Clear();
 
+                    // Play absorb sound + haptic
+                    if (Audio.AudioManager.Instance != null)
+                    {
+                        Audio.AudioManager.Instance.PlayAbsorbSound();
+                        Audio.AudioManager.Instance.VibrateLight();
+                    }
+
                     for (int i = 0; i < rowItems.Count; i++)
                     {
                         ConveyorBeltItem rowItem = rowItems[i];

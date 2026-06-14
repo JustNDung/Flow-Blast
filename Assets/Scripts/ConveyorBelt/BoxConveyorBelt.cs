@@ -428,6 +428,10 @@ namespace ConveyorBelt
                 if (boxTransform != null)
                     Destroy(boxTransform.gameObject);
 
+                // Play box complete sound
+                if (Audio.AudioManager.Instance != null)
+                    Audio.AudioManager.Instance.PlayBoxCompleteSound();
+
                 // Notify GameManager to check win condition
                 MessageDispatcher.MessageDispatcher.Publish(new BoxCompletedMessage());
             });
