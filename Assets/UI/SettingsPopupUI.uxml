@@ -1,0 +1,62 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xmlns:popup="UI">
+    <Style src="project://database/Assets/UI/SettingsPopupStyle.uss"/>
+
+    <popup:SettingsPopupController
+            name="settings-popup">
+
+        <ui:VisualElement
+                name="popup-panel">
+
+            <ui:VisualElement
+                    name="header">
+
+                <ui:Label
+                        name="title-label"
+                        text="Settings"/>
+
+                <ui:Button
+                        name="close-button"
+                        text="✕"/>
+            </ui:VisualElement>
+
+            <ui:VisualElement
+                    name="audio-panel">
+
+                <ui:Button
+                        name="sound-button"
+                        text="🔊"/>
+
+                <ui:Button
+                        name="music-button"
+                        text="♫"/>
+
+                <ui:Button
+                        name="vibrate-button"
+                        text="📳"/>
+            </ui:VisualElement>
+
+            <ui:Button
+                    name="retry-button"
+                    text="Retry"/>
+
+            <ui:Button
+                    name="restore-button"
+                    text="Restore"/>
+
+            <ui:Button
+                    name="rate-button"
+                    text="Rate"/>
+
+            <ui:Label
+                    name="terms-label"
+                    text="Term &amp; Privacy"/>
+
+            <ui:Label
+                    name="version-label"
+                    text="v0.0.8"/>
+
+        </ui:VisualElement>
+
+    </popup:SettingsPopupController>
+
+</ui:UXML>

@@ -1,0 +1,190 @@
+#settings-popup
+{
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+
+    align-items: center;
+    justify-content: center;
+
+    background-color: rgba(0,0,0,0.55);
+}
+
+#popup-panel
+{
+    width: 520px;
+    min-height: 760px;
+
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 20px;
+    padding-bottom: 30px;
+
+    background-color: #4285F4;
+
+    border-top-left-radius: 36px;
+    border-top-right-radius: 36px;
+    border-bottom-left-radius: 36px;
+    border-bottom-right-radius: 36px;
+
+    border-left-width: 10px;
+    border-right-width: 10px;
+    border-top-width: 10px;
+    border-bottom-width: 10px;
+
+    border-left-color: #F5F5F5;
+    border-right-color: #F5F5F5;
+    border-top-color: #F5F5F5;
+    border-bottom-color: #F5F5F5;
+}
+
+#header
+{
+    height: 120px;
+
+    flex-direction: row;
+
+    justify-content: center;
+    align-items: center;
+}
+
+#title-label
+{
+    flex-grow: 1;
+
+    unity-font-style: bold;
+
+    font-size: 42px;
+
+    color: white;
+
+    -unity-text-outline-width: 4px;
+    -unity-text-outline-color: #2A4E95;
+
+    text-align: middle-center;
+}
+
+#close-button
+{
+    width: 80px;
+    height: 80px;
+
+    background-color: #4F8EFF;
+
+    border-radius: 20px;
+
+    color: white;
+
+    font-size: 30px;
+
+    unity-font-style: bold;
+}
+
+#audio-panel
+{
+    height: 150px;
+
+    margin-bottom: 25px;
+
+    flex-direction: row;
+
+    justify-content: space-evenly;
+    align-items: center;
+
+    background-color: rgba(255,255,255,0.08);
+
+    border-radius: 28px;
+}
+
+#sound-button,
+#music-button,
+#vibrate-button
+{
+    width: 110px;
+    height: 110px;
+
+    background-color: #78D400;
+
+    border-radius: 24px;
+
+    color: white;
+
+    font-size: 42px;
+
+    unity-font-style: bold;
+}
+
+.toggle-off
+{
+    background-color: #7A7A7A;
+}
+
+#retry-button
+{
+    height: 105px;
+
+    margin-bottom: 18px;
+
+    background-color: #FFD32B;
+
+    border-radius: 28px;
+
+    color: white;
+
+    font-size: 32px;
+
+    unity-font-style: bold;
+
+    -unity-text-outline-width: 3px;
+    -unity-text-outline-color: #8A5A00;
+}
+
+#restore-button,
+#rate-button
+{
+    height: 100px;
+
+    margin-bottom: 18px;
+
+    background-color: #31C7FF;
+
+    border-radius: 28px;
+
+    color: white;
+
+    font-size: 30px;
+
+    unity-font-style: bold;
+
+    -unity-text-outline-width: 3px;
+    -unity-text-outline-color: #165D8C;
+}
+
+#terms-label
+{
+    margin-top: 12px;
+
+    font-size: 20px;
+
+    color: #244EA7;
+
+    unity-font-style: bold;
+
+    text-align: middle-center;
+}
+
+#version-label
+{
+    margin-top: 8px;
+
+    font-size: 24px;
+
+    color: #244EA7;
+
+    unity-font-style: bold;
+
+    text-align: middle-center;
+}
