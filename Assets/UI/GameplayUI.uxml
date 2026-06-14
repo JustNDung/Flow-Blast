@@ -64,19 +64,17 @@
                 </ui:VisualElement>
             </gameplay:SettingsPopupController>
         </ui:VisualElement>
-        <ui:VisualElement name="result-overlay" class="result-overlay">
-            <gameplay:ResultPopupController name="result-popup">
-                <ui:VisualElement name="result-container" class="result-container">
-                    <ui:VisualElement name="icon-container" class="result-icon"/>
-                    <ui:Label name="result-title" text="LEVEL COMPLETE!" class="result-title"/>
-                    <ui:Label name="result-subtitle" text="Amazing!" class="result-subtitle"/>
-                    <ui:VisualElement name="result-buttons" class="result-buttons">
-                        <ui:Button name="restart-button" text="Retry" class="action-button restart-button"/>
-                        <ui:Button name="next-level-button" text="Next Level" class="action-button next-level-button"/>
-                        <ui:Button name="main-menu-button" text="Menu" class="action-button main-menu-button"/>
-                    </ui:VisualElement>
+        <gameplay:ResultPopupController name="result-popup" class="result-overlay">
+            <ui:VisualElement name="result-container" class="result-container">
+                <ui:VisualElement name="icon-container" class="result-icon"/>
+                <ui:Label name="result-title" text="LEVEL COMPLETE!" class="result-title"/>
+                <ui:Label name="result-subtitle" text="Amazing!" class="result-subtitle"/>
+                <ui:VisualElement name="result-buttons" class="result-buttons">
+                    <ui:Button name="restart-button" text="Retry" class="action-button restart-button"/>
+                    <ui:Button name="next-level-button" text="Next Level" class="action-button next-level-button"/>
+                    <ui:Button name="main-menu-button" text="Menu" class="action-button main-menu-button"/>
                 </ui:VisualElement>
-            </gameplay:ResultPopupController>
-        </ui:VisualElement>
+            </ui:VisualElement>
+        </gameplay:ResultPopupController>
     </gameplay:GameplayUIController>
 </ui:UXML>

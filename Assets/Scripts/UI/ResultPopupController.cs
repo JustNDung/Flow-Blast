@@ -6,7 +6,6 @@ namespace UI
     [UxmlElement]
     public partial class ResultPopupController : VisualElement
     {
-        private VisualElement _resultOverlay;
         private VisualElement _resultContainer;
         private VisualElement _iconContainer;
         private Label _titleLabel;
@@ -26,7 +25,6 @@ namespace UI
 
         private void OnAttached(AttachToPanelEvent evt)
         {
-            _resultOverlay = this.Q<VisualElement>("result-overlay");
             _resultContainer = this.Q<VisualElement>("result-container");
             _iconContainer = this.Q<VisualElement>("icon-container");
             _titleLabel = this.Q<Label>("result-title");
@@ -43,6 +41,9 @@ namespace UI
 
             if (_mainMenuButton != null)
                 _mainMenuButton.clicked += () => OnMainMenu?.Invoke();
+
+            // Start hidden - this controller IS the overlay
+            style.display = DisplayStyle.None;
         }
 
         /// <summary>
@@ -50,10 +51,10 @@ namespace UI
         /// </summary>
         public void Show(GameResult result)
         {
-            if (_resultOverlay == null || _resultContainer == null)
+            if (_resultContainer == null)
                 return;
 
-            _resultOverlay.style.display = DisplayStyle.Flex;
+            style.display = DisplayStyle.Flex;
 
             if (result == GameResult.Win)
             {
@@ -121,8 +122,7 @@ namespace UI
         /// </summary>
         public void Hide()
         {
-            if (_resultOverlay != null)
-                _resultOverlay.style.display = DisplayStyle.None;
+            style.display = DisplayStyle.None;
         }
     }
 }
